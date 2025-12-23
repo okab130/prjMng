@@ -76,10 +76,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for testcase in testcase_list %}
+                        {% for testcase in testcases %}
                         <tr>
                             <td>
-                                <a href="{% url 'quality:testcase_detail' testcase.pk %}">{{ testcase.test_case_id }}</a>
+                                <a href="{% url 'quality:testcase_detail' testcase.pk %}">{{ testcase.test_case_number }}</a>
                             </td>
                             <td>{{ testcase.title }}</td>
                             <td>

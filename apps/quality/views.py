@@ -86,6 +86,12 @@ class TestCaseListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         return TestCase.objects.select_related('project').order_by('test_case_number')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.projects.models import Project
+        context['projects'] = Project.objects.all()
+        return context
 
 
 class TestCaseDetailView(LoginRequiredMixin, DetailView):
@@ -166,5 +172,10 @@ class QualityReportView(LoginRequiredMixin, TemplateView):
         context['executed_tests'] = TestExecution.objects.filter(
             result='PASSED'
         ).count()
+        
+        # 最新バグ一覧
+        context['recent_bugs'] = Bug.objects.select_related(
+            'project', 'assignee', 'reporter'
+        ).order_by('-found_date')[:10]
         
         return context

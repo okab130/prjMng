@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}品質レポート{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'quality:bug_list' %}" class="btn btn-danger">
+    <i class="bi bi-bug"></i> バグ一覧
+</a>
+<a href="{% url 'quality:testcase_list' %}" class="btn btn-info">
+    <i class="bi bi-clipboard-check"></i> テストケース
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- バグ統計 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-bug"></i> バグ統計</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ total_bugs }}</h3>
+                        <p>総バグ数</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-danger">{{ open_bugs }}</h3>
+                        <p>未解決</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-success">{{ fixed_bugs }}</h3>
+                        <p>修正済み</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="progress" style="height: 30px;">
+                    {% if total_bugs > 0 %}
+                    <div class="progress-bar bg-success" style="width: {{ fixed_bugs|floatformat:0 }}{{ total_bugs|floatformat:0|divisibleby:1 }}%">
+                        修正済み: {{ fixed_bugs }}
+                    </div>
+                    <div class="progress-bar bg-danger" style="width: {{ open_bugs|floatformat:0 }}{{ total_bugs|floatformat:0|divisibleby:1 }}%">
+                        未解決: {{ open_bugs }}
+                    </div>
+                    {% else %}
+                    <div class="progress-bar bg-secondary" style="width: 100%">
+                        データなし
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- テスト統計 -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-clipboard-check"></i> テスト統計</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h3 class="text-primary">{{ total_testcases }}</h3>
+                        <p>総テストケース数</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3 class="text-success">{{ executed_tests }}</h3>
+                        <p>実行成功</p>
+                    </div>
+                    <div class="col-md-4">
+                        {% if total_testcases > 0 %}
+                        <h3 class="text-info">{{ executed_tests|floatformat:0 }}{{ total_testcases|floatformat:0|divisibleby:1 }}%</h3>
+                        {% else %}
+                        <h3 class="text-info">0%</h3>
+                        {% endif %}
+                        <p>実行率</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="progress" style="height: 30px;">
+                    {% if total_testcases > 0 %}
+                    <div class="progress-bar bg-success" style="width: {{ executed_tests|floatformat:0 }}{{ total_testcases|floatformat:0|divisibleby:1 }}%">
+                        実行: {{ executed_tests }}
+                    </div>
+                    {% else %}
+                    <div class="progress-bar bg-secondary" style="width: 100%">
+                        データなし
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- バグ詳細リスト -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-ul"></i> 最新バグ</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>バグID</th>
+                                <th>タイトル</th>
+                                <th>ステータス</th>
+                                <th>優先度</th>
+                                <th>担当者</th>
+                                <th>発見日</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bug in recent_bugs %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'quality:bug_detail' bug.pk %}">{{ bug.bug_number }}</a>
+                                </td>
+                                <td>{{ bug.title }}</td>
+                                <td>
+                                    {% if bug.status == 'NEW' %}
+                                    <span class="badge bg-danger">新規</span>
+                                    {% elif bug.status == 'IN_PROGRESS' %}
+                                    <span class="badge bg-warning">対応中</span>
+                                    {% elif bug.status == 'FIXED' %}
+                                    <span class="badge bg-success">修正済み</span>
+                                    {% elif bug.status == 'VERIFIED' %}
+                                    <span class="badge bg-info">検証済み</span>
+                                    {% elif bug.status == 'CLOSED' %}
+                                    <span class="badge bg-secondary">クローズ</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if bug.priority == 'CRITICAL' %}
+                                    <span class="badge bg-danger">致命的</span>
+                                    {% elif bug.priority == 'HIGH' %}
+                                    <span class="badge bg-warning">高</span>
+                                    {% elif bug.priority == 'MEDIUM' %}
+                                    <span class="badge bg-info">中</span>
+                                    {% elif bug.priority == 'LOW' %}
+                                    <span class="badge bg-secondary">低</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ bug.assignee.display_name|default:"未割当" }}</td>
+                                <td>{{ bug.found_date|date:"Y/m/d" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">バグがありません</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

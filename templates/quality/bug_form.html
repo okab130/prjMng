@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}バグ編集{% else %}バグ登録{% endif %}{% endblock %}
+{% block page_title %}{% if object %}バグ編集{% else %}バグ登録{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">
+                                プロジェクト <span class="text-danger">*</span>
+                            </label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.project.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.bug_number.id_for_label }}" class="form-label">
+                                バグ番号 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.bug_number }}
+                            {% if form.bug_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.bug_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">例: BUG-001</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            タイトル <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.title.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            説明 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                ステータス <span class="text-danger">*</span>
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                優先度 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.priority.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.severity.id_for_label }}" class="form-label">
+                                重要度 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.severity }}
+                            {% if form.severity.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.severity.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                カテゴリ <span class="text-danger">*</span>
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.reporter.id_for_label }}" class="form-label">
+                                報告者 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.reporter }}
+                            {% if form.reporter.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.reporter.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.assignee.id_for_label }}" class="form-label">
+                                担当者
+                            </label>
+                            {{ form.assignee }}
+                            {% if form.assignee.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.assignee.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.reproduction_steps.id_for_label }}" class="form-label">
+                            再現手順
+                        </label>
+                        {{ form.reproduction_steps }}
+                        {% if form.reproduction_steps.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.reproduction_steps.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.module.id_for_label }}" class="form-label">
+                                モジュール
+                            </label>
+                            {{ form.module }}
+                            {% if form.module.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.module.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.found_date.id_for_label }}" class="form-label">
+                                発見日
+                            </label>
+                            <div class="input-group">
+                                {{ form.found_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.found_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.found_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.found_version.id_for_label }}" class="form-label">
+                                発見バージョン
+                            </label>
+                            {{ form.found_version }}
+                            {% if form.found_version.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.found_version.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.fixed_version.id_for_label }}" class="form-label">
+                                修正バージョン
+                            </label>
+                            {{ form.fixed_version }}
+                            {% if form.fixed_version.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.fixed_version.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.environment.id_for_label }}" class="form-label">
+                            環境
+                        </label>
+                        {{ form.environment }}
+                        {% if form.environment.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.environment.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">OS、ブラウザ、端末などの環境情報</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.fix_description.id_for_label }}" class="form-label">
+                            修正内容
+                        </label>
+                        {{ form.fix_description }}
+                        {% if form.fix_description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.fix_description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.related_task.id_for_label }}" class="form-label">
+                            関連タスク
+                        </label>
+                        {{ form.related_task }}
+                        {% if form.related_task.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.related_task.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if object %}{% url 'quality:bug_detail' object.pk %}{% else %}{% url 'quality:bug_list' %}{% endif %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}登録{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea, select').forEach(function(element) {
+        element.classList.add('form-control');
+    });
+    
+    document.querySelectorAll('textarea').forEach(function(element) {
+        element.rows = 4;
+    });
+});
+</script>
+{% endblock %}

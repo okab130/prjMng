@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ bug.bug_number }} - {{ bug.title }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'quality:bug_update' bug.pk %}" class="btn btn-primary">
+    <i class="bi bi-pencil"></i> 編集
+</a>
+<a href="{% url 'quality:bug_delete' bug.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> 削除
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- バグ情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bug"></i> バグ情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">バグ番号</th>
+                        <td>{{ bug.bug_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>タイトル</th>
+                        <td>{{ bug.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>プロジェクト</th>
+                        <td><a href="{% url 'projects:project_detail' bug.project.pk %}">{{ bug.project.name }}</a></td>
+                    </tr>
+                    <tr>
+                        <th>説明</th>
+                        <td>{{ bug.description|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>報告者</th>
+                        <td>{{ bug.reporter.display_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>担当者</th>
+                        <td>{{ bug.assignee.display_name|default:"未割当" }}</td>
+                    </tr>
+                    <tr>
+                        <th>ステータス</th>
+                        <td>
+                            <span class="badge bg-{% if bug.status == 'NEW' or bug.status == 'REOPENED' %}danger{% elif bug.status == 'IN_PROGRESS' %}warning text-dark{% elif bug.status == 'FIXED' %}info{% elif bug.status == 'VERIFIED' %}success{% else %}secondary{% endif %}">
+                                {{ bug.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>優先度</th>
+                        <td>
+                            <span class="badge bg-{% if bug.priority == 'CRITICAL' %}danger{% elif bug.priority == 'HIGH' %}warning text-dark{% elif bug.priority == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                {{ bug.get_priority_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>重要度</th>
+                        <td>
+                            <span class="badge bg-{% if bug.severity == 'CRITICAL' %}danger{% elif bug.severity == 'HIGH' %}warning text-dark{% elif bug.severity == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                                {{ bug.get_severity_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>カテゴリ</th>
+                        <td>{{ bug.get_category_display }}</td>
+                    </tr>
+                    {% if bug.module %}
+                    <tr>
+                        <th>モジュール</th>
+                        <td>{{ bug.module }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>発見日</th>
+                        <td>{{ bug.found_date|default:"未設定" }}</td>
+                    </tr>
+                    {% if bug.found_version %}
+                    <tr>
+                        <th>発見バージョン</th>
+                        <td>{{ bug.found_version }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if bug.fixed_version %}
+                    <tr>
+                        <th>修正バージョン</th>
+                        <td>{{ bug.fixed_version }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if bug.environment %}
+                    <tr>
+                        <th>環境</th>
+                        <td>{{ bug.environment|linebreaks }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <!-- 再現手順 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> 再現手順</h5>
+            </div>
+            <div class="card-body">
+                <pre class="mb-0">{{ bug.reproduction_steps|default:"未設定" }}</pre>
+            </div>
+        </div>
+
+        <!-- 修正内容 -->
+        {% if bug.fix_description %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-wrench"></i> 修正内容</h5>
+            </div>
+            <div class="card-body">
+                {{ bug.fix_description|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- コメント -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-chat"></i> コメント</h5>
+            </div>
+            <div class="card-body">
+                {% if bug.comments.all %}
+                {% for comment in bug.comments.all %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ comment.user.display_name }}</strong>
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </div>
+                    <p class="mt-2 mb-0">{{ comment.comment|linebreaks }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">コメントがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- 関連タスク -->
+        {% if bug.related_task %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-link"></i> 関連タスク</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'tasks:task_detail' bug.related_task.pk %}">
+                    {{ bug.related_task.task_number }} - {{ bug.related_task.title }}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 日付情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar"></i> 日付情報</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <strong>発見日:</strong><br>
+                        {{ bug.found_date|default:"未設定" }}
+                    </li>
+                    {% if bug.fixed_date %}
+                    <li class="mb-2">
+                        <strong>修正日:</strong><br>
+                        {{ bug.fixed_date }}
+                    </li>
+                    {% endif %}
+                    {% if bug.verified_date %}
+                    <li class="mb-2">
+                        <strong>検証日:</strong><br>
+                        {{ bug.verified_date }}
+                    </li>
+                    {% endif %}
+                    {% if bug.closed_date %}
+                    <li class="mb-2">
+                        <strong>クローズ日:</strong><br>
+                        {{ bug.closed_date }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- タイムライン -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> タイムライン</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-circle-fill text-danger" style="font-size: 8px;"></i>
+                        作成: {{ bug.created_at|date:"Y/m/d H:i" }}
+                        <br><small class="text-muted ms-3">by {{ bug.created_by.display_name }}</small>
+                    </li>
+                    {% if bug.updated_at != bug.created_at %}
+                    <li class="mb-2">
+                        <i class="bi bi-circle-fill text-info" style="font-size: 8px;"></i>
+                        更新: {{ bug.updated_at|date:"Y/m/d H:i" }}
+                        <br><small class="text-muted ms-3">by {{ bug.updated_by.display_name }}</small>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

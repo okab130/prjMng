@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block page_title %}レビュー一覧{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'reviews:review_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> 新規レビュー
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if reviews %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>レビュー番号</th>
+                        <th>タイトル</th>
+                        <th>プロジェクト</th>
+                        <th>レビュー種別</th>
+                        <th>予定日時</th>
+                        <th>ステータス</th>
+                        <th>結論</th>
+                        <th>指摘件数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td><a href="{% url 'reviews:review_detail' review.pk %}">{{ review.review_number }}</a></td>
+                        <td>{{ review.title }}</td>
+                        <td>{{ review.project.name }}</td>
+                        <td>{{ review.get_review_type_display }}</td>
+                        <td>{{ review.scheduled_at|date:"Y/m/d H:i" }}</td>
+                        <td>
+                            <span class="badge bg-{% if review.status == 'PLANNED' %}primary{% elif review.status == 'IN_PROGRESS' %}warning text-dark{% elif review.status == 'COMPLETED' %}success{% else %}secondary{% endif %}">
+                                {{ review.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if review.conclusion == 'APPROVED' %}
+                            <span class="badge bg-success">{{ review.get_conclusion_display }}</span>
+                            {% elif review.conclusion == 'CONDITIONAL' %}
+                            <span class="badge bg-warning text-dark">{{ review.get_conclusion_display }}</span>
+                            {% elif review.conclusion == 'REJECTED' %}
+                            <span class="badge bg-danger">{{ review.get_conclusion_display }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ review.get_conclusion_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ review.issues.count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ページネーション -->
+        {% if is_paginated %}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">前へ</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">次へ</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard-check" style="font-size: 3rem; color: #ccc;"></i>
+            <p class="text-muted mt-3">レビューがありません</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

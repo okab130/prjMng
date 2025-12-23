@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}レビュー編集{% else %}レビュー作成{% endif %}{% endblock %}
+{% block page_title %}{% if object %}レビュー編集{% else %}レビュー作成{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">
+                                プロジェクト <span class="text-danger">*</span>
+                            </label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.project.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.review_number.id_for_label }}" class="form-label">
+                                レビュー番号 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.review_number }}
+                            {% if form.review_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.review_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">例: RV-001</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            タイトル <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.title.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.review_type.id_for_label }}" class="form-label">
+                                レビュー種別 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.review_type }}
+                            {% if form.review_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.review_type.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                ステータス <span class="text-danger">*</span>
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.conclusion.id_for_label }}" class="form-label">
+                                結論
+                            </label>
+                            {{ form.conclusion }}
+                            {% if form.conclusion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.conclusion.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            説明
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.target_description.id_for_label }}" class="form-label">
+                            レビュー対象
+                        </label>
+                        {{ form.target_description }}
+                        {% if form.target_description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.target_description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.scheduled_at.id_for_label }}" class="form-label">
+                                予定日時 <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.scheduled_at }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.scheduled_at.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.scheduled_at.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                場所
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.location.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">会議室、オンラインミーティングURLなど</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.actual_start_at.id_for_label }}" class="form-label">
+                                実施開始日時
+                            </label>
+                            <div class="input-group">
+                                {{ form.actual_start_at }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.actual_start_at.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_start_at.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.actual_end_at.id_for_label }}" class="form-label">
+                                実施終了日時
+                            </label>
+                            <div class="input-group">
+                                {{ form.actual_end_at }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.actual_end_at.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_end_at.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.minutes.id_for_label }}" class="form-label">
+                            議事録
+                        </label>
+                        {{ form.minutes }}
+                        {% if form.minutes.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.minutes.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.decisions.id_for_label }}" class="form-label">
+                            決定事項
+                        </label>
+                        {{ form.decisions }}
+                        {% if form.decisions.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.decisions.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if object %}{% url 'reviews:review_detail' object.pk %}{% else %}{% url 'reviews:review_list' %}{% endif %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}作成{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="text"], input[type="number"], input[type="datetime-local"], textarea, select').forEach(function(element) {
+        element.classList.add('form-control');
+    });
+    
+    document.querySelectorAll('textarea').forEach(function(element) {
+        element.rows = 4;
+    });
+});
+</script>
+{% endblock %}

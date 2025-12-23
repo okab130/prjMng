@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}マイルストーン編集{% else %}マイルストーン作成{% endif %}{% endblock %}
+{% block page_title %}{% if object %}マイルストーン編集{% else %}マイルストーン作成{% endif %} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            マイルストーン名 <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.name.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            説明
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.target_date.id_for_label }}" class="form-label">
+                                目標日 <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.target_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.target_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.target_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if object %}
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.actual_date.id_for_label }}" class="form-label">
+                                実績日
+                            </label>
+                            <div class="input-group">
+                                {{ form.actual_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.actual_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                ステータス
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.criteria.id_for_label }}" class="form-label">
+                            達成基準
+                        </label>
+                        {{ form.criteria }}
+                        {% if form.criteria.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.criteria.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.order.id_for_label }}" class="form-label">
+                            表示順序
+                        </label>
+                        {{ form.order }}
+                        {% if form.order.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.order.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'projects:milestone_list' project.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}作成{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // 日付フィールドにdatepickerを適用
+    $('input[type="date"]').each(function() {
+        $(this).datepicker({
+            dateFormat: 'yy-mm-dd',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: '-5:+5'
+        });
+    });
+});
+</script>
+{% endblock %}

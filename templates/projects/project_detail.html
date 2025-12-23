@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ project.project_code }} - {{ project.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'projects:project_update' project.pk %}" class="btn btn-primary">
+    <i class="bi bi-pencil"></i> 編集
+</a>
+<a href="{% url 'projects:member_list' project.pk %}" class="btn btn-info">
+    <i class="bi bi-people"></i> メンバー
+</a>
+<a href="{% url 'projects:milestone_list' project.pk %}" class="btn btn-success">
+    <i class="bi bi-flag"></i> マイルストーン
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- プロジェクト情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> プロジェクト情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">プロジェクトコード</th>
+                        <td>{{ project.project_code }}</td>
+                    </tr>
+                    <tr>
+                        <th>プロジェクト名</th>
+                        <td>{{ project.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>ステータス</th>
+                        <td>
+                            <span class="badge bg-{% if project.status == 'IN_PROGRESS' %}success{% elif project.status == 'COMPLETED' %}secondary{% elif project.status == 'SUSPENDED' %}danger{% else %}primary{% endif %}">
+                                {{ project.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>説明</th>
+                        <td>{{ project.description|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>期間</th>
+                        <td>
+                            {{ project.start_date }} 〜 {{ project.end_date }}
+                            {% if project.actual_start_date %}
+                                <br><small class="text-muted">実績: {{ project.actual_start_date }} 〜 {{ project.actual_end_date|default:"進行中" }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>予算</th>
+                        <td>{% if project.budget %}¥{{ project.budget|floatformat:0 }}{% else %}未設定{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>進捗率</th>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ project.progress_rate }}%">
+                                    {{ project.progress_rate }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- タスク一覧 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> タスク</h5>
+                <a href="{% url 'tasks:task_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus"></i> 新規タスク
+                </a>
+            </div>
+            <div class="card-body">
+                {% if project.tasks.all %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>タスク番号</th>
+                                <th>タイトル</th>
+                                <th>担当者</th>
+                                <th>期限</th>
+                                <th>進捗</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in project.tasks.all|slice:":10" %}
+                            <tr>
+                                <td><a href="{% url 'tasks:task_detail' task.pk %}">{{ task.task_number }}</a></td>
+                                <td>{{ task.title }}</td>
+                                <td>{{ task.assignee.display_name|default:"未割当" }}</td>
+                                <td>{{ task.planned_end_date }}</td>
+                                <td>
+                                    <div class="progress" style="height: 5px; width: 100px;">
+                                        <div class="progress-bar" style="width: {{ task.progress_rate }}%"></div>
+                                    </div>
+                                    <small>{{ task.progress_rate }}%</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">タスクがありません</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- バグ一覧 -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-bug"></i> バグ</h5>
+                <a href="{% url 'quality:bug_create' %}?project={{ project.pk }}" class="btn btn-sm btn-danger">
+                    <i class="bi bi-plus"></i> 新規バグ
+                </a>
+            </div>
+            <div class="card-body">
+                {% if project.bugs.all %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>バグ番号</th>
+                                <th>タイトル</th>
+                                <th>優先度</th>
+                                <th>ステータス</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bug in project.bugs.all|slice:":10" %}
+                            <tr>
+                                <td><a href="{% url 'quality:bug_detail' bug.pk %}">{{ bug.bug_number }}</a></td>
+                                <td>{{ bug.title }}</td>
+                                <td>
+                                    <span class="badge bg-{% if bug.priority == 'CRITICAL' %}danger{% elif bug.priority == 'HIGH' %}warning{% else %}info{% endif %}">
+                                        {{ bug.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>{{ bug.get_status_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">バグがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- メンバー -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-people"></i> プロジェクトメンバー</h5>
+            </div>
+            <div class="card-body">
+                {% if project.members.all %}
+                <div class="list-group list-group-flush">
+                    {% for member in project.members.all %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-person-circle"></i> {{ member.user.display_name }}
+                            <br><small class="text-muted">{{ member.get_role_display }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">メンバーがいません</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- マイルストーン -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-flag"></i> マイルストーン</h5>
+            </div>
+            <div class="card-body">
+                {% if project.milestones.all %}
+                <div class="list-group list-group-flush">
+                    {% for milestone in project.milestones.all %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ milestone.name }}</h6>
+                                <small class="text-muted">{{ milestone.target_date }}</small>
+                            </div>
+                            <span class="badge bg-{% if milestone.status == 'COMPLETED' %}success{% elif milestone.status == 'IN_PROGRESS' %}warning{% else %}secondary{% endif %}">
+                                {{ milestone.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">マイルストーンがありません</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 統計 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> 統計</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">タスク数</small>
+                    <h4>{{ project.tasks.count }}</h4>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">バグ数</small>
+                    <h4>{{ project.bugs.count }}</h4>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">メンバー数</small>
+                    <h4>{{ project.members.count }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

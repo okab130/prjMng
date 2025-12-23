@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+
+{% block title %}ダッシュボード{% endblock %}
+{% block page_title %}ダッシュボード{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 統計カード -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2">プロジェクト</h6>
+                        <h2 class="card-title mb-0">{{ stats.total_projects }}</h2>
+                    </div>
+                    <i class="bi bi-folder" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2">タスク</h6>
+                        <h2 class="card-title mb-0">{{ stats.total_tasks }}</h2>
+                    </div>
+                    <i class="bi bi-list-task" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+                <small>進行中: {{ stats.in_progress_tasks }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2">バグ</h6>
+                        <h2 class="card-title mb-0">{{ stats.total_bugs }}</h2>
+                    </div>
+                    <i class="bi bi-bug" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+                <small>未対応: {{ stats.open_bugs }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-2">レビュー</h6>
+                        <h2 class="card-title mb-0">{{ stats.total_reviews }}</h2>
+                    </div>
+                    <i class="bi bi-clipboard-check" style="font-size: 3rem; opacity: 0.5;"></i>
+                </div>
+                <small>今月: {{ stats.reviews_this_month }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- グラフ行 -->
+<div class="row mb-4">
+    <!-- タスクステータス分布 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> タスクステータス分布</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="taskStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- バグ重要度分布 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> バグ重要度分布</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="bugSeverityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- プロジェクト進捗 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> プロジェクト進捗</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="projectProgressChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 月別タスク完了数 -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar-check"></i> 月別タスク完了数</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="taskCompletionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 最近のアクティビティ -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> 最近のタスク</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_tasks %}
+                <div class="list-group list-group-flush">
+                    {% for task in recent_tasks %}
+                    <a href="{% url 'tasks:task_detail' task.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ task.task_number }} - {{ task.title }}</h6>
+                                <small class="text-muted">{{ task.project.name }}</small>
+                            </div>
+                            <span class="badge bg-{% if task.status == 'COMPLETED' %}success{% elif task.status == 'IN_PROGRESS' %}primary{% else %}secondary{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">タスクがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> 最近のバグ</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_bugs %}
+                <div class="list-group list-group-flush">
+                    {% for bug in recent_bugs %}
+                    <a href="{% url 'quality:bug_detail' bug.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ bug.bug_number }} - {{ bug.title }}</h6>
+                                <small class="text-muted">{{ bug.project.name }}</small>
+                            </div>
+                            <span class="badge bg-{% if bug.severity == 'CRITICAL' %}danger{% elif bug.severity == 'HIGH' %}warning text-dark{% else %}info{% endif %}">
+                                {{ bug.get_severity_display }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">バグがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// タスクステータス分布（円グラフ）
+const taskStatusData = {{ task_status_data|safe }};
+new Chart(document.getElementById('taskStatusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: taskStatusData.labels,
+        datasets: [{
+            data: taskStatusData.data,
+            backgroundColor: [
+                '#6c757d',  // 未着手
+                '#0d6efd',  // 進行中
+                '#198754',  // 完了
+                '#ffc107',  // 保留
+                '#dc3545'   // キャンセル
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// バグ重要度分布（棒グラフ）
+const bugSeverityData = {{ bug_severity_data|safe }};
+new Chart(document.getElementById('bugSeverityChart'), {
+    type: 'bar',
+    data: {
+        labels: bugSeverityData.labels,
+        datasets: [{
+            label: 'バグ数',
+            data: bugSeverityData.data,
+            backgroundColor: [
+                '#dc3545',  // 致命的
+                '#ffc107',  // 高
+                '#0dcaf0',  // 中
+                '#6c757d'   // 低
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// プロジェクト進捗（横棒グラフ）
+const projectProgressData = {{ project_progress_data|safe }};
+new Chart(document.getElementById('projectProgressChart'), {
+    type: 'bar',
+    data: {
+        labels: projectProgressData.labels,
+        datasets: [{
+            label: '進捗率 (%)',
+            data: projectProgressData.data,
+            backgroundColor: '#0d6efd'
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+
+// 月別タスク完了数（折れ線グラフ）
+const taskCompletionData = {{ task_completion_data|safe }};
+new Chart(document.getElementById('taskCompletionChart'), {
+    type: 'line',
+    data: {
+        labels: taskCompletionData.labels,
+        datasets: [{
+            label: '完了タスク数',
+            data: taskCompletionData.data,
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block page_title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<!-- 統計カード -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">プロジェクト</h6>
+                        <h2 class="mb-0">{{ total_projects }}</h2>
+                        <small>進行中: {{ active_projects }}</small>
+                    </div>
+                    <i class="bi bi-folder" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">タスク</h6>
+                        <h2 class="mb-0">{{ total_tasks }}</h2>
+                        <small>自分: {{ my_tasks }} / 進行中: {{ in_progress_tasks }}</small>
+                    </div>
+                    <i class="bi bi-list-task" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">バグ</h6>
+                        <h2 class="mb-0">{{ total_bugs }}</h2>
+                        <small>未対応: {{ open_bugs }} / 自分: {{ my_bugs }}</small>
+                    </div>
+                    <i class="bi bi-bug" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">レビュー</h6>
+                        <h2 class="mb-0">{{ total_reviews }}</h2>
+                        <small>予定: {{ pending_reviews }}</small>
+                    </div>
+                    <i class="bi bi-clipboard-check" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 最近のプロジェクト -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-folder"></i> 最近のプロジェクト</h5>
+                <a href="{% url 'projects:project_list' %}" class="btn btn-sm btn-outline-primary">すべて見る</a>
+            </div>
+            <div class="card-body">
+                {% if recent_projects %}
+                <div class="list-group list-group-flush">
+                    {% for project in recent_projects %}
+                    <a href="{% url 'projects:project_detail' project.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ project.project_code }} - {{ project.name }}</h6>
+                            <small>
+                                <span class="badge bg-{% if project.status == 'IN_PROGRESS' %}success{% elif project.status == 'COMPLETED' %}secondary{% else %}primary{% endif %}">
+                                    {{ project.get_status_display }}
+                                </span>
+                            </small>
+                        </div>
+                        <div class="progress mt-2" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ project.progress_rate }}%"></div>
+                        </div>
+                        <small class="text-muted">進捗: {{ project.progress_rate }}%</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">プロジェクトがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 自分のタスク -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-task"></i> 自分のタスク</h5>
+                <a href="{% url 'tasks:task_list' %}" class="btn btn-sm btn-outline-success">すべて見る</a>
+            </div>
+            <div class="card-body">
+                {% if my_task_list %}
+                <div class="list-group list-group-flush">
+                    {% for task in my_task_list %}
+                    <a href="{% url 'tasks:task_detail' task.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ task.task_number }} - {{ task.title }}</h6>
+                            <small>
+                                <span class="badge bg-{% if task.priority == 'HIGH' %}danger{% elif task.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                    {{ task.get_priority_display }}
+                                </span>
+                            </small>
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-folder"></i> {{ task.project.name }} |
+                            <i class="bi bi-calendar"></i> {{ task.planned_end_date }}
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">割り当てられたタスクがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- 未対応バグ -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-bug"></i> 未対応バグ</h5>
+                <a href="{% url 'quality:bug_list' %}" class="btn btn-sm btn-outline-danger">すべて見る</a>
+            </div>
+            <div class="card-body">
+                {% if open_bug_list %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>バグ番号</th>
+                                <th>タイトル</th>
+                                <th>プロジェクト</th>
+                                <th>優先度</th>
+                                <th>担当者</th>
+                                <th>ステータス</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bug in open_bug_list %}
+                            <tr>
+                                <td><a href="{% url 'quality:bug_detail' bug.pk %}">{{ bug.bug_number }}</a></td>
+                                <td>{{ bug.title }}</td>
+                                <td>{{ bug.project.name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if bug.priority == 'CRITICAL' %}danger{% elif bug.priority == 'HIGH' %}warning{% else %}info{% endif %}">
+                                        {{ bug.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>{{ bug.assignee.display_name|default:"未割当" }}</td>
+                                <td>
+                                    <span class="badge bg-{% if bug.status == 'NEW' %}danger{% else %}warning{% endif %}">
+                                        {{ bug.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">未対応バグはありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

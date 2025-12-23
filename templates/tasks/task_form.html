@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
+{% block page_title %}{% if object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.project.id_for_label }}" class="form-label">
+                                プロジェクト <span class="text-danger">*</span>
+                            </label>
+                            {{ form.project }}
+                            {% if form.project.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.project.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.task_number.id_for_label }}" class="form-label">
+                                タスク番号 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.task_number }}
+                            {% if form.task_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.task_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">例: TSK-001</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            タイトル <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.title.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            説明
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">
+                                ステータス <span class="text-danger">*</span>
+                            </label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                優先度 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.priority.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.progress_rate.id_for_label }}" class="form-label">
+                                進捗率 (%)
+                            </label>
+                            {{ form.progress_rate }}
+                            {% if form.progress_rate.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.progress_rate.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.assignee.id_for_label }}" class="form-label">
+                                担当者
+                            </label>
+                            {{ form.assignee }}
+                            {% if form.assignee.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.assignee.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.parent.id_for_label }}" class="form-label">
+                                親タスク
+                            </label>
+                            {{ form.parent }}
+                            {% if form.parent.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.parent.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.planned_start_date.id_for_label }}" class="form-label">
+                                開始予定日
+                            </label>
+                            <div class="input-group">
+                                {{ form.planned_start_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.planned_start_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.planned_start_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.planned_end_date.id_for_label }}" class="form-label">
+                                終了予定日
+                            </label>
+                            <div class="input-group">
+                                {{ form.planned_end_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.planned_end_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.planned_end_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.actual_start_date.id_for_label }}" class="form-label">
+                                実績開始日
+                            </label>
+                            <div class="input-group">
+                                {{ form.actual_start_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.actual_start_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_start_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.actual_end_date.id_for_label }}" class="form-label">
+                                実績終了日
+                            </label>
+                            <div class="input-group">
+                                {{ form.actual_end_date }}
+                                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                            </div>
+                            {% if form.actual_end_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_end_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.estimated_hours.id_for_label }}" class="form-label">
+                                予定工数 (時間)
+                            </label>
+                            {{ form.estimated_hours }}
+                            {% if form.estimated_hours.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.estimated_hours.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.actual_hours.id_for_label }}" class="form-label">
+                                実績工数 (時間)
+                            </label>
+                            {{ form.actual_hours }}
+                            {% if form.actual_hours.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.actual_hours.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% if object %}{% url 'tasks:task_detail' object.pk %}{% else %}{% url 'tasks:task_list' %}{% endif %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}作成{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

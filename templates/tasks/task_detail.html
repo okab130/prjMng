@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block page_title %}{{ task.task_number }} - {{ task.title }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-primary">
+    <i class="bi bi-pencil"></i> 編集
+</a>
+<a href="{% url 'tasks:task_delete' task.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> 削除
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- タスク情報 -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> タスク情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="30%">タスク番号</th>
+                        <td>{{ task.task_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>タイトル</th>
+                        <td>{{ task.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>プロジェクト</th>
+                        <td><a href="{% url 'projects:project_detail' task.project.pk %}">{{ task.project.name }}</a></td>
+                    </tr>
+                    <tr>
+                        <th>説明</th>
+                        <td>{{ task.description|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>担当者</th>
+                        <td>{{ task.assignee.display_name|default:"未割当" }}</td>
+                    </tr>
+                    <tr>
+                        <th>ステータス</th>
+                        <td>
+                            <span class="badge bg-{% if task.status == 'COMPLETED' %}success{% elif task.status == 'IN_PROGRESS' %}primary{% else %}secondary{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>優先度</th>
+                        <td>
+                            <span class="badge bg-{% if task.priority == 'HIGH' %}danger{% elif task.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>予定期間</th>
+                        <td>{{ task.planned_start_date }} 〜 {{ task.planned_end_date }}</td>
+                    </tr>
+                    {% if task.actual_start_date %}
+                    <tr>
+                        <th>実績期間</th>
+                        <td>{{ task.actual_start_date }} 〜 {{ task.actual_end_date|default:"進行中" }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>見積工数</th>
+                        <td>{{ task.estimated_hours|default:"未設定" }} 時間</td>
+                    </tr>
+                    {% if task.actual_hours %}
+                    <tr>
+                        <th>実績工数</th>
+                        <td>{{ task.actual_hours }} 時間</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>進捗率</th>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" style="width: {{ task.progress_rate }}%">
+                                    {{ task.progress_rate }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- コメント -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-chat"></i> コメント</h5>
+                <a href="{% url 'tasks:comment_add' task.pk %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus"></i> コメント追加
+                </a>
+            </div>
+            <div class="card-body">
+                {% if task.comments.all %}
+                {% for comment in task.comments.all %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ comment.user.display_name }}</strong>
+                        <small class="text-muted">{{ comment.created_at }}</small>
+                    </div>
+                    <p class="mt-2 mb-0">{{ comment.comment|linebreaks }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">コメントがありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- サブタスク -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-list-nested"></i> サブタスク</h5>
+            </div>
+            <div class="card-body">
+                {% if task.subtasks.all %}
+                <div class="list-group list-group-flush">
+                    {% for subtask in task.subtasks.all %}
+                    <a href="{% url 'tasks:task_detail' subtask.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ subtask.task_number }}</h6>
+                                <small>{{ subtask.title }}</small>
+                            </div>
+                            <small>{{ subtask.progress_rate }}%</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">サブタスクはありません</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 依存関係 -->
+        {% if task.parent %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> 親タスク</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'tasks:task_detail' task.parent.pk %}">
+                    {{ task.parent.task_number }} - {{ task.parent.title }}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- タイムライン -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> タイムライン</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="bi bi-circle-fill text-primary" style="font-size: 8px;"></i>
+                        作成: {{ task.created_at|date:"Y/m/d H:i" }}
+                        <br><small class="text-muted ms-3">by {{ task.created_by.display_name }}</small>
+                    </li>
+                    {% if task.updated_at != task.created_at %}
+                    <li class="mb-2">
+                        <i class="bi bi-circle-fill text-info" style="font-size: 8px;"></i>
+                        更新: {{ task.updated_at|date:"Y/m/d H:i" }}
+                        <br><small class="text-muted ms-3">by {{ task.updated_by.display_name }}</small>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+# Django
+Django==4.2.7
+django-environ==0.11.2
+
+# データベース
+psycopg[binary]==3.3.2
+
+# 履歴管理
+django-simple-history==3.4.0
+
+# フォーム・UI
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# ファイル管理
+Pillow==10.4.0
+
+# ユーティリティ
+python-dateutil==2.8.2
+
+# 開発用
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3

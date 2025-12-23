@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}タスクカレンダー{% endblock %}
+{% block page_title %}タスクカレンダー{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <a href="{% url 'tasks:task_list' %}" class="btn btn-secondary">
+        <i class="bi bi-list-task"></i> タスク一覧
+    </a>
+    <a href="{% url 'tasks:task_gantt' %}" class="btn btn-warning">
+        <i class="bi bi-bar-chart-steps"></i> ガントチャート
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+<style>
+    #calendar {
+        max-width: 100%;
+        margin: 0 auto;
+        background: white;
+        padding: 1rem;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- フィルター -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">プロジェクト</label>
+                <select name="project" class="form-select" onchange="this.form.submit()">
+                    <option value="">すべて</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">担当者</label>
+                <select name="assignee" class="form-select" onchange="this.form.submit()">
+                    <option value="">すべて</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ user.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- カレンダー -->
+<div class="card">
+    <div class="card-body">
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- 凡例 -->
+<div class="card mt-3">
+    <div class="card-body">
+        <h6><i class="bi bi-info-circle"></i> 凡例</h6>
+        <div class="row">
+            <div class="col-md-2">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #6c757d; border-radius: 3px;"></span> 未着手
+            </div>
+            <div class="col-md-2">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #0d6efd; border-radius: 3px;"></span> 進行中
+            </div>
+            <div class="col-md-2">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #198754; border-radius: 3px;"></span> 完了
+            </div>
+            <div class="col-md-2">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #ffc107; border-radius: 3px;"></span> 保留
+            </div>
+            <div class="col-md-2">
+                <span style="display: inline-block; width: 15px; height: 15px; background: #dc3545; border-radius: 3px;"></span> キャンセル
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    
+    // イベントデータ
+    var events = {{ events_json|safe }};
+    
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        locale: 'ja',
+        buttonText: {
+            today: '今日',
+            month: '月',
+            week: '週',
+            day: '日'
+        },
+        events: events,
+        eventClick: function(info) {
+            window.location.href = info.event.url;
+        },
+        eventContent: function(arg) {
+            return {
+                html: '<div style="padding: 2px; font-size: 0.85rem;">' + 
+                      arg.event.title + 
+                      '<br><small>' + Math.round(arg.event.extendedProps.progress * 100) + '%</small>' +
+                      '</div>'
+            };
+        }
+    });
+    
+    calendar.render();
+});
+</script>
+{% endblock %}

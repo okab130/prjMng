@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ testcase.test_case_id }} - テストケース詳細{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>テストケース詳細: {{ testcase.test_case_id }}</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'quality:testcase_update' testcase.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> 編集
+            </a>
+            <a href="{% url 'quality:testcase_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> 一覧に戻る
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- 基本情報 -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">基本情報</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 200px;">テストケースID</th>
+                            <td>{{ testcase.test_case_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>タイトル</th>
+                            <td>{{ testcase.title }}</td>
+                        </tr>
+                        <tr>
+                            <th>カテゴリー</th>
+                            <td>
+                                {% if testcase.category == 'functional' %}機能
+                                {% elif testcase.category == 'non_functional' %}非機能
+                                {% elif testcase.category == 'regression' %}回帰
+                                {% elif testcase.category == 'integration' %}統合
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>優先度</th>
+                            <td>
+                                {% if testcase.priority == 'high' %}
+                                <span class="badge bg-danger">高</span>
+                                {% elif testcase.priority == 'medium' %}
+                                <span class="badge bg-warning">中</span>
+                                {% else %}
+                                <span class="badge bg-info">低</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>プロジェクト</th>
+                            <td>{{ testcase.project.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>前提条件</th>
+                            <td>{{ testcase.preconditions|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>テスト手順</th>
+                            <td>{{ testcase.test_steps|linebreaks }}</td>
+                        </tr>
+                        <tr>
+                            <th>期待結果</th>
+                            <td>{{ testcase.expected_result|linebreaks }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- メタ情報 -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">メタ情報</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>作成者:</strong> {{ testcase.created_by.display_name }}</p>
+                    <p><strong>作成日:</strong> {{ testcase.created_at|date:"Y/m/d H:i" }}</p>
+                    <p><strong>更新者:</strong> {{ testcase.updated_by.display_name|default:"未設定" }}</p>
+                    <p><strong>更新日:</strong> {{ testcase.updated_at|date:"Y/m/d H:i" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

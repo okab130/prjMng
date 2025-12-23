@@ -128,7 +128,7 @@ class TaskCalendarView(LoginRequiredMixin, TemplateView):
                     'backgroundColor': color,
                     'borderColor': color,
                     'extendedProps': {
-                        'progress': float(task.progress_rate or 0) / 100,
+                        'progress': float(task.progress_rate or 0) / 100.0,
                         'status': task.status
                     }
                 })
@@ -182,7 +182,7 @@ class TaskGanttView(LoginRequiredMixin, TemplateView):
                     'text': f"{task.task_number} - {task.title}",
                     'start_date': task.planned_start_date.strftime('%Y-%m-%d 00:00'),
                     'duration': duration,
-                    'progress': float(task.progress_rate or 0) / 100,
+                    'progress': float(task.progress_rate or 0) / 100.0,
                     'parent': task.parent_id if task.parent_id else 0,
                     'status': task.status
                 })

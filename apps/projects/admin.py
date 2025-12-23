@@ -6,8 +6,8 @@ from .models import Project, ProjectMember, Milestone
 class ProjectMemberInline(admin.TabularInline):
     model = ProjectMember
     extra = 1
-    fields = ['user', 'role', 'joined_at', 'left_at']
-    readonly_fields = ['joined_at']
+    fields = ['user', 'role', 'left_at']
+    readonly_fields = []
 
 
 class MilestoneInline(admin.TabularInline):

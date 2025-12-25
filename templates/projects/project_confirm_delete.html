@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}プロジェクト削除確認{% endblock %}
+{% block page_title %}プロジェクト削除確認{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> プロジェクト削除確認</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger mb-4">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>このプロジェクトを削除してもよろしいですか？</strong>
+                    <p class="mb-0 mt-2">削除すると以下のデータがすべて失われます：</p>
+                    <ul class="mb-0 mt-2">
+                        <li>プロジェクト情報と全履歴</li>
+                        <li>タスク（{{ project.tasks.count }}件）</li>
+                        <li>バグ（{{ project.bugs.count }}件）</li>
+                        <li>マイルストーン（{{ project.milestones.count }}件）</li>
+                        <li>メンバー情報（{{ project.members.count }}名）</li>
+                        <li>レビュー情報</li>
+                        <li>すべてのコメントと履歴</li>
+                    </ul>
+                    <p class="text-danger mt-2 mb-0"><strong>※ この操作は取り消せません！</strong></p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">削除対象のプロジェクト情報</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th style="width: 150px;">プロジェクト名:</th>
+                                <td><strong>{{ project.name }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>プロジェクトコード:</th>
+                                <td>{{ project.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>ステータス:</th>
+                                <td>
+                                    {% if project.status == 'planning' %}計画中
+                                    {% elif project.status == 'in_progress' %}進行中
+                                    {% elif project.status == 'completed' %}完了
+                                    {% elif project.status == 'on_hold' %}保留
+                                    {% elif project.status == 'cancelled' %}中止
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>期間:</th>
+                                <td>{{ project.start_date|date:"Y/m/d" }} ～ {{ project.end_date|date:"Y/m/d" }}</td>
+                            </tr>
+                            <tr>
+                                <th>作成者:</th>
+                                <td>{{ project.created_by.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>作成日:</th>
+                                <td>{{ project.created_at|date:"Y/m/d H:i" }}</td>
+                            </tr>
+                            {% if project.description %}
+                            <tr>
+                                <th>説明:</th>
+                                <td>{{ project.description|truncatewords:30 }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+
+                        <div class="mt-3 p-3 bg-light border rounded">
+                            <h6 class="text-danger mb-2">削除される関連データ:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-check2-square"></i> タスク: <strong>{{ project.tasks.count }}件</strong></li>
+                                        <li><i class="bi bi-bug"></i> バグ: <strong>{{ project.bugs.count }}件</strong></li>
+                                        <li><i class="bi bi-flag"></i> マイルストーン: <strong>{{ project.milestones.count }}件</strong></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-people"></i> メンバー: <strong>{{ project.members.count }}名</strong></li>
+                                        <li><i class="bi bi-eye"></i> レビュー: すべて</li>
+                                        <li><i class="bi bi-chat-left-text"></i> コメント: すべて</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label text-danger" for="confirmDelete">
+                            <strong>上記の内容を理解し、プロジェクトを削除することに同意します</strong>
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'projects:project_detail' project.pk %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> キャンセル
+                        </a>
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="bi bi-trash"></i> 削除する
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmDelete').addEventListener('change', function() {
+    document.getElementById('deleteButton').disabled = !this.checked;
+});
+</script>
+{% endblock %}

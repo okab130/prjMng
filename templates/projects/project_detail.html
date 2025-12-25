@@ -12,6 +12,9 @@
 <a href="{% url 'projects:milestone_list' project.pk %}" class="btn btn-success">
     <i class="bi bi-flag"></i> マイルストーン
 </a>
+<a href="{% url 'projects:project_delete' project.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> 削除
+</a>
 {% endblock %}
 
 {% block content %}

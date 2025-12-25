@@ -2,6 +2,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.db.models import Q
 from apps.projects.models import Project
 from apps.accounts.models import User
@@ -87,7 +88,7 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         self.object.is_deleted = True
         self.object.save()
-        return super().delete(request, *args, **kwargs)
+        return redirect(self.success_url)
 
 
 class TaskCalendarView(LoginRequiredMixin, TemplateView):

@@ -69,6 +69,7 @@
                         <th>ステータス</th>
                         <th>期限</th>
                         <th>進捗</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -94,6 +95,14 @@
                                 <div class="progress-bar" style="width: {{ task.progress_rate }}%"></div>
                             </div>
                             <small>{{ task.progress_rate }}%</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-sm btn-primary" title="編集">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'tasks:task_delete' task.pk %}" class="btn btn-sm btn-danger" title="削除">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

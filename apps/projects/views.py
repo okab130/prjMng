@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from .models import Project, ProjectMember, Milestone
 from .forms import ProjectForm, MilestoneForm
 
@@ -68,7 +68,7 @@ class ProjectDeleteView(LoginRequiredMixin, DeleteView):
         self.object = self.get_object()
         self.object.is_deleted = True
         self.object.save()
-        return super().delete(request, *args, **kwargs)
+        return redirect(self.success_url)
 
 
 class ProjectMemberListView(LoginRequiredMixin, ListView):

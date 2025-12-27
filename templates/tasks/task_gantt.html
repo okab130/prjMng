@@ -71,9 +71,16 @@
 <!-- ガントチャート -->
 <div class="card">
     <div class="card-body">
+        {% if tasks_count > 0 %}
         <div class="gantt_container">
             <div id="gantt_here"></div>
         </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> 表示可能なタスクがありません。
+            <br>タスクに「開始日」と「期限」を設定してください。
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -103,107 +110,86 @@
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // タスクデータ（グローバル）
+    // タスクデータ
     var tasksData = {{ tasks_json|safe }};
     
-    // ガントチャート初期化関数
-    function initGantt(scale) {
-        // 完全にクリア
-        if (gantt.$initialized) {
-            gantt.clearAll();
-            gantt.destructor();
-        }
-        
-        // 設定をリセット
-        gantt.config = {};
-        gantt.templates = {};
-        
-        // 基本設定
-        gantt.config.date_format = "%Y-%m-%d";
-        gantt.config.xml_date = "%Y-%m-%d";
-        gantt.config.readonly = true;
-        gantt.config.show_progress = true;
-        gantt.config.autosize = "y";
-        gantt.config.auto_scheduling = false;
-        gantt.config.work_time = true;
-        
-        // スケール設定
-        if (scale === "week") {
-            gantt.config.scale_unit = "week";
-            gantt.config.date_scale = "Week #%W";
-            gantt.config.subscales = [
-                {unit: "day", step: 1, date: "%d %M"}
-            ];
-            gantt.config.min_column_width = 70;
-        } else if (scale === "month") {
-            gantt.config.scale_unit = "month";
-            gantt.config.date_scale = "%F %Y";
-            gantt.config.subscales = [
-                {unit: "day", step: 1, date: "%j"}
-            ];
-            gantt.config.min_column_width = 80;
-        } else {
-            gantt.config.scale_unit = "day";
-            gantt.config.date_scale = "%d %M %Y";
-            gantt.config.subscales = [];
-            gantt.config.min_column_width = 70;
-        }
-        
-        // カラム設定
-        gantt.config.columns = [
-            {name: "text", label: "タスク", width: 200, tree: true},
-            {name: "start_date", label: "開始日", align: "center", width: 80, template: function(obj) {
-                return gantt.templates.date_grid(obj.start_date);
-            }},
-            {name: "duration", label: "日数", align: "center", width: 50},
-            {name: "progress", label: "進捗", align: "center", width: 60, template: function(obj) {
-                return Math.round(obj.progress * 100) + "%";
-            }}
-        ];
-        
-        // ステータスに応じた色分け
-        gantt.templates.task_class = function(start, end, task) {
-            switch(task.status) {
-                case "NOT_STARTED":
-                    return "gantt-task-not-started";
-                case "IN_PROGRESS":
-                    return "gantt-task-in-progress";
-                case "COMPLETED":
-                    return "gantt-task-completed";
-                case "ON_HOLD":
-                    return "gantt-task-on-hold";
-                case "CANCELLED":
-                    return "gantt-task-cancelled";
-                default:
-                    return "";
-            }
-        };
-        
-        // 日付表示フォーマット
-        gantt.templates.date_grid = function(date) {
-            if (!date) return "";
-            return gantt.date.date_to_str("%d/%m/%Y")(date);
-        };
-        
-        gantt.templates.task_text = function(start, end, task) {
-            return task.text;
-        };
-        
-        // 初期化
-        gantt.init("gantt_here");
-        
-        // データロード
-        var tasks = {
-            data: tasksData
-        };
-        gantt.parse(tasks);
-        
-        console.log('Gantt initialized with scale:', scale);
+    console.log('=== Gantt Chart Debug ===');
+    console.log('Tasks count:', tasksData.length);
+    console.log('Tasks data:', tasksData);
+    
+    if (tasksData.length === 0) {
+        console.warn('No tasks to display');
+        return;
     }
     
-    // 初期表示
-    var currentScale = "{{ scale|default:'day' }}";
-    initGantt(currentScale);
+    // 基本設定
+    gantt.config.date_format = "%Y-%m-%d";
+    gantt.config.readonly = true;
+    gantt.config.show_progress = true;
+    gantt.config.autosize = "xy";
+    gantt.config.row_height = 30;
+    
+    // スケール設定
+    var scale = "{{ scale|default:'day' }}";
+    console.log('Scale:', scale);
+    
+    if (scale === "week") {
+        gantt.config.scale_unit = "week";
+        gantt.config.date_scale = "Week #%W";
+        gantt.config.subscales = [
+            {unit: "day", step: 1, date: "%d %M"}
+        ];
+    } else if (scale === "month") {
+        gantt.config.scale_unit = "month";
+        gantt.config.date_scale = "%F %Y";
+        gantt.config.subscales = [
+            {unit: "day", step: 1, date: "%j"}
+        ];
+    } else {
+        gantt.config.scale_unit = "day";
+        gantt.config.date_scale = "%d %M %Y";
+        gantt.config.subscales = [];
+    }
+    
+    // カラム設定
+    gantt.config.columns = [
+        {name: "text", label: "タスク", width: 200, tree: true},
+        {name: "start_date", label: "開始日", align: "center", width: 100},
+        {name: "duration", label: "日数", align: "center", width: 60},
+        {name: "progress", label: "進捗", align: "center", width: 70, template: function(obj) {
+            return Math.round(obj.progress * 100) + "%";
+        }}
+    ];
+    
+    // ステータスに応じた色分け
+    gantt.templates.task_class = function(start, end, task) {
+        switch(task.status) {
+            case "NOT_STARTED":
+                return "gantt-task-not-started";
+            case "IN_PROGRESS":
+                return "gantt-task-in-progress";
+            case "COMPLETED":
+                return "gantt-task-completed";
+            case "ON_HOLD":
+                return "gantt-task-on-hold";
+            case "CANCELLED":
+                return "gantt-task-cancelled";
+            default:
+                return "";
+        }
+    };
+    
+    try {
+        // 初期化
+        gantt.init("gantt_here");
+        console.log('Gantt initialized');
+        
+        // データロード
+        gantt.parse({data: tasksData});
+        console.log('Data parsed, task count:', gantt.getTaskCount());
+    } catch (error) {
+        console.error('Gantt initialization error:', error);
+    }
 });
 </script>
 <style>

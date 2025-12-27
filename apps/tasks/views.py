@@ -273,22 +273,24 @@ class TaskGanttView(LoginRequiredMixin, TemplateView):
                     if duration < 1:
                         duration = 1
                     
-                    # dhtmlxGanttが期待する形式: "DD-MM-YYYY" または "YYYY-MM-DD"
+                    # dhtmlxGanttが期待する形式: "YYYY-MM-DD"
                     tasks_data.append({
-                        'id': str(task.id),
+                        'id': task.id,  # 数値のまま
                         'text': f"{task.task_number} - {task.title}",
                         'start_date': task.planned_start_date.strftime('%Y-%m-%d'),
                         'duration': duration,
                         'progress': float(task.progress_rate or 0) / 100.0,
-                        'parent': str(task.parent_id) if task.parent_id else 0,
-                        'status': task.status,
-                        'open': True
+                        'status': task.status
                     })
                 except Exception as e:
                     # エラーがあってもスキップして続行
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Error processing task {task.id}: {e}")
                     continue
         
-        context['tasks_json'] = json.dumps(tasks_data)
+        context['tasks_json'] = json.dumps(tasks_data, ensure_ascii=False)
+        context['tasks_count'] = len(tasks_data)
         return context
 
 

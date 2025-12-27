@@ -92,7 +92,8 @@
 {% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.css" rel="stylesheet">
+{% load static %}
+<link href="{% static 'gantt/dhtmlxgantt.css' %}" rel="stylesheet">
 <style>
     #gantt_here {
         width: 100%;
@@ -109,7 +110,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.js" onload="console.log('dhtmlxGantt JS loaded')" onerror="console.error('Failed to load dhtmlxGantt JS')"></script>
+{% load static %}
+<script src="{% static 'gantt/dhtmlxgantt.js' %}" onload="console.log('dhtmlxGantt JS loaded from local file')" onerror="console.error('Failed to load local dhtmlxGantt JS')"></script>
 <script>
 // dhtmlxGanttライブラリが読み込まれるまで待機
 function initGantt() {

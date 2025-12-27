@@ -131,21 +131,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // スケール設定
     var scale = "{{ scale|default:'day' }}";
-    console.log('Scale:', scale);
+    console.log('Scale from template:', scale);
+    console.log('Scale type:', typeof scale);
+    console.log('Scale === "week":', scale === "week");
+    console.log('Scale === "month":', scale === "month");
+    console.log('Scale === "day":', scale === "day");
     
     if (scale === "week") {
+        console.log('Setting week scale');
         gantt.config.scale_unit = "week";
         gantt.config.date_scale = "Week #%W";
         gantt.config.subscales = [
             {unit: "day", step: 1, date: "%d %M"}
         ];
     } else if (scale === "month") {
+        console.log('Setting month scale');
         gantt.config.scale_unit = "month";
         gantt.config.date_scale = "%F %Y";
         gantt.config.subscales = [
             {unit: "day", step: 1, date: "%j"}
         ];
     } else {
+        console.log('Setting day scale');
         gantt.config.scale_unit = "day";
         gantt.config.date_scale = "%d %M %Y";
         gantt.config.subscales = [];
@@ -180,9 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     try {
+        // 初期化前の設定確認
+        console.log('Before init - scale_unit:', gantt.config.scale_unit);
+        console.log('Before init - date_scale:', gantt.config.date_scale);
+        
         // 初期化
         gantt.init("gantt_here");
         console.log('Gantt initialized');
+        
+        // 初期化後の設定確認
+        console.log('After init - scale_unit:', gantt.config.scale_unit);
+        console.log('After init - date_scale:', gantt.config.date_scale);
+        console.log('After init - subscales:', gantt.config.subscales);
         
         // データロード
         gantt.parse({data: tasksData});

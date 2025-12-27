@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gantt Test</title>
+    <link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css" rel="stylesheet">
+    <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; }
+        #gantt_here { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h2 style="padding: 10px;">dhtmlxGantt テスト</h2>
+    <div id="gantt_here"></div>
+    
+    <script>
+        // テストデータ
+        var tasks = {
+            data: [
+                {
+                    id: 15,
+                    text: "004 - 計画",
+                    start_date: "2026-01-05",
+                    duration: 4,
+                    progress: 0.05,
+                    status: "IN_PROGRESS"
+                },
+                {
+                    id: 13,
+                    text: "002 - テストタスク2",
+                    start_date: "2026-01-05",
+                    duration: 10,
+                    progress: 0.65,
+                    status: "IN_PROGRESS"
+                },
+                {
+                    id: 14,
+                    text: "003 - APIタスク",
+                    start_date: "2026-01-26",
+                    duration: 4,
+                    progress: 0.0,
+                    status: "NOT_STARTED"
+                }
+            ]
+        };
+        
+        console.log('Tasks:', tasks);
+        
+        // 設定
+        gantt.config.date_format = "%Y-%m-%d";
+        gantt.config.scale_unit = "day";
+        gantt.config.date_scale = "%d %M %Y";
+        gantt.config.readonly = true;
+        
+        gantt.config.columns = [
+            {name: "text", label: "タスク", width: 200, tree: true},
+            {name: "start_date", label: "開始日", align: "center", width: 100},
+            {name: "duration", label: "日数", align: "center", width: 60},
+            {name: "progress", label: "進捗", align: "center", width: 70, template: function(obj) {
+                return Math.round(obj.progress * 100) + "%";
+            }}
+        ];
+        
+        try {
+            gantt.init("gantt_here");
+            console.log('Gantt initialized');
+            
+            gantt.parse(tasks);
+            console.log('Data parsed, count:', gantt.getTaskCount());
+        } catch (error) {
+            console.error('Error:', error);
+            document.body.innerHTML += '<div style="color:red;padding:20px;">エラー: ' + error.message + '</div>';
+        }
+    </script>
+</body>
+</html>

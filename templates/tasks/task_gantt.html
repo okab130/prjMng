@@ -112,16 +112,27 @@
 <script src="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // タスクデータ
-    var tasksData = {{ tasks_json|safe }};
-    
     console.log('=== Gantt Chart Debug ===');
     console.log('Gantt version:', gantt.version);
+    console.log('gantt object:', typeof gantt);
+    
+    // DOM要素確認
+    var container = document.getElementById('gantt_here');
+    console.log('Container element:', container);
+    console.log('Container exists:', !!container);
+    
+    // タスクデータ
+    var tasksData = {{ tasks_json|safe }};
     console.log('Tasks count:', tasksData.length);
     console.log('Tasks data:', tasksData);
     
     if (tasksData.length === 0) {
         console.warn('No tasks to display');
+        return;
+    }
+    
+    if (!container) {
+        console.error('gantt_here container not found!');
         return;
     }
     
@@ -162,6 +173,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ];
     }
     
+    console.log('Config scales:', gantt.config.scales);
+    
     // カラム設定
     gantt.config.columns = [
         {name: "text", label: "タスク", width: 200, tree: true},
@@ -197,13 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
             gantt.clearAll();
         }
         
-        console.log('Config scales:', gantt.config.scales);
-        
         // 初期化
+        console.log('Initializing gantt...');
         gantt.init("gantt_here");
-        console.log('Gantt initialized');
+        console.log('Gantt initialized successfully');
         
         // データロード
+        console.log('Parsing data...');
         gantt.parse({data: tasksData});
         console.log('Data parsed, task count:', gantt.getTaskCount());
         
@@ -214,9 +227,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (scaleHeader) {
                 console.log('Scale header HTML:', scaleHeader.innerHTML.substring(0, 200));
             }
+            
+            var taskRows = document.querySelectorAll('.gantt_task_row');
+            console.log('Task rows count:', taskRows.length);
         }, 200);
     } catch (error) {
         console.error('Gantt initialization error:', error);
+        console.error('Error stack:', error.stack);
     }
 });
 </script>

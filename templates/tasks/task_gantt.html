@@ -109,9 +109,15 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.js"></script>
+<script src="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.js" onload="console.log('dhtmlxGantt JS loaded')" onerror="console.error('Failed to load dhtmlxGantt JS')"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+// dhtmlxGanttライブラリが読み込まれるまで待機
+function initGantt() {
+    if (typeof gantt === 'undefined') {
+        console.error('gantt is not defined - library not loaded');
+        return;
+    }
+    
     console.log('=== Gantt Chart Debug ===');
     console.log('Gantt version:', gantt.version);
     console.log('gantt object:', typeof gantt);
@@ -235,6 +241,12 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Gantt initialization error:', error);
         console.error('Error stack:', error.stack);
     }
+}
+
+// DOMContentLoadedで実行
+document.addEventListener('DOMContentLoaded', function() {
+    // 少し遅延させてライブラリの読み込みを確実にする
+    setTimeout(initGantt, 100);
 });
 </script>
 <style>

@@ -187,6 +187,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     try {
+        // 既存のガントチャートインスタンスをクリア
+        if (window.gantt && gantt.$initialized) {
+            console.log('Clearing existing gantt instance');
+            gantt.clearAll();
+        }
+        
         // 初期化前の設定確認
         console.log('Before init - scale_unit:', gantt.config.scale_unit);
         console.log('Before init - date_scale:', gantt.config.date_scale);
@@ -203,6 +209,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // データロード
         gantt.parse({data: tasksData});
         console.log('Data parsed, task count:', gantt.getTaskCount());
+        
+        // 強制的に再描画
+        gantt.render();
+        console.log('Gantt rendered');
+        
+        // 最終確認：レンダリング後の設定
+        setTimeout(function() {
+            console.log('After render - scale_unit:', gantt.config.scale_unit);
+            var scaleHeader = document.querySelector('.gantt_scale_line');
+            console.log('Scale header exists:', !!scaleHeader);
+            if (scaleHeader) {
+                console.log('Scale header text:', scaleHeader.textContent.substring(0, 50));
+            }
+        }, 200);
     } catch (error) {
         console.error('Gantt initialization error:', error);
     }

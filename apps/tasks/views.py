@@ -273,10 +273,11 @@ class TaskGanttView(LoginRequiredMixin, TemplateView):
                     if duration < 1:
                         duration = 1
                     
+                    # dhtmlxGanttが期待する形式: "DD-MM-YYYY" または "YYYY-MM-DD"
                     tasks_data.append({
                         'id': str(task.id),
                         'text': f"{task.task_number} - {task.title}",
-                        'start_date': task.planned_start_date.strftime('%d-%m-%Y'),
+                        'start_date': task.planned_start_date.strftime('%Y-%m-%d'),
                         'duration': duration,
                         'progress': float(task.progress_rate or 0) / 100.0,
                         'parent': str(task.parent_id) if task.parent_id else 0,

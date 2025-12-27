@@ -119,34 +119,34 @@ document.addEventListener('DOMContentLoaded', function() {
         gantt.templates = {};
         
         // 基本設定
-        gantt.config.date_format = "%d-%m-%Y";
+        gantt.config.date_format = "%Y-%m-%d";
+        gantt.config.xml_date = "%Y-%m-%d";
         gantt.config.readonly = true;
         gantt.config.show_progress = true;
         gantt.config.autosize = "y";
         gantt.config.auto_scheduling = false;
+        gantt.config.work_time = true;
         
         // スケール設定
         if (scale === "week") {
             gantt.config.scale_unit = "week";
-            gantt.config.date_scale = "%M %d";
-            gantt.config.step = 1;
+            gantt.config.date_scale = "Week #%W";
             gantt.config.subscales = [
-                {unit: "day", step: 1, date: "%j %D"}
+                {unit: "day", step: 1, date: "%d %M"}
             ];
             gantt.config.min_column_width = 70;
         } else if (scale === "month") {
             gantt.config.scale_unit = "month";
             gantt.config.date_scale = "%F %Y";
-            gantt.config.step = 1;
             gantt.config.subscales = [
                 {unit: "day", step: 1, date: "%j"}
             ];
-            gantt.config.min_column_width = 100;
+            gantt.config.min_column_width = 80;
         } else {
             gantt.config.scale_unit = "day";
-            gantt.config.date_scale = "%d %M";
+            gantt.config.date_scale = "%d %M %Y";
             gantt.config.subscales = [];
-            gantt.config.min_column_width = 50;
+            gantt.config.min_column_width = 70;
         }
         
         // カラム設定
@@ -181,7 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 日付表示フォーマット
         gantt.templates.date_grid = function(date) {
+            if (!date) return "";
             return gantt.date.date_to_str("%d/%m/%Y")(date);
+        };
+        
+        gantt.templates.task_text = function(start, end, task) {
+            return task.text;
         };
         
         // 初期化

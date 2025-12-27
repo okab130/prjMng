@@ -103,69 +103,88 @@
 <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ガントチャート設定
-    gantt.config.date_format = "%Y-%m-%d %H:%i";
-    gantt.config.scale_unit = "{{ scale|default:'day' }}";
-    
-    // スケール設定
-    if ("{{ scale }}" === "week") {
-        gantt.config.scale_unit = "week";
-        gantt.config.date_scale = "Week %W";
-        gantt.config.subscales = [
-            {unit: "day", step: 1, date: "%d"}
+    // ガントチャート初期化関数
+    function initGantt(scale) {
+        // 既存のガントチャートをクリア
+        if (gantt.$initialized) {
+            gantt.clearAll();
+        }
+        
+        // ガントチャート設定
+        gantt.config.date_format = "%Y-%m-%d %H:%i";
+        
+        // スケール設定
+        if (scale === "week") {
+            gantt.config.scale_unit = "week";
+            gantt.config.date_scale = "Week %W";
+            gantt.config.subscales = [
+                {unit: "day", step: 1, date: "%d"}
+            ];
+        } else if (scale === "month") {
+            gantt.config.scale_unit = "month";
+            gantt.config.date_scale = "%Y年%m月";
+            gantt.config.subscales = [
+                {unit: "week", step: 1, date: "Week %W"}
+            ];
+        } else {
+            gantt.config.scale_unit = "day";
+            gantt.config.date_scale = "%Y-%m-%d";
+            gantt.config.subscales = [];
+        }
+        
+        gantt.config.columns = [
+            {name: "text", label: "タスク", width: 200, tree: true},
+            {name: "start_date", label: "開始日", align: "center", width: 80},
+            {name: "duration", label: "日数", align: "center", width: 50},
+            {name: "progress", label: "進捗", align: "center", width: 60, template: function(obj) {
+                return Math.round(obj.progress * 100) + "%";
+            }}
         ];
-    } else if ("{{ scale }}" === "month") {
-        gantt.config.scale_unit = "month";
-        gantt.config.date_scale = "%Y年%m月";
-        gantt.config.subscales = [
-            {unit: "week", step: 1, date: "Week %W"}
-        ];
-    } else {
-        gantt.config.scale_unit = "day";
-        gantt.config.date_scale = "%Y-%m-%d";
+        
+        // ステータスに応じた色分け
+        gantt.templates.task_class = function(start, end, task) {
+            switch(task.status) {
+                case "NOT_STARTED":
+                    return "gantt-task-not-started";
+                case "IN_PROGRESS":
+                    return "gantt-task-in-progress";
+                case "COMPLETED":
+                    return "gantt-task-completed";
+                case "ON_HOLD":
+                    return "gantt-task-on-hold";
+                case "CANCELLED":
+                    return "gantt-task-cancelled";
+                default:
+                    return "";
+            }
+        };
+        
+        // 読み取り専用設定
+        gantt.config.readonly = true;
+        
+        // 初期化
+        gantt.init("gantt_here");
+        
+        // データロード
+        var tasks = {
+            data: {{ tasks_json|safe }}
+        };
+        gantt.parse(tasks);
     }
     
-    gantt.config.columns = [
-        {name: "text", label: "タスク", width: 200, tree: true},
-        {name: "start_date", label: "開始日", align: "center", width: 80},
-        {name: "duration", label: "日数", align: "center", width: 50},
-        {name: "progress", label: "進捗", align: "center", width: 60, template: function(obj) {
-            return Math.round(obj.progress * 100) + "%";
-        }}
-    ];
-    
-    // ステータスに応じた色分け
-    gantt.templates.task_class = function(start, end, task) {
-        switch(task.status) {
-            case "NOT_STARTED":
-                return "gantt-task-not-started";
-            case "IN_PROGRESS":
-                return "gantt-task-in-progress";
-            case "COMPLETED":
-                return "gantt-task-completed";
-            case "ON_HOLD":
-                return "gantt-task-on-hold";
-            case "CANCELLED":
-                return "gantt-task-cancelled";
-            default:
-                return "";
-        }
-    };
-    
-    // 読み取り専用設定
-    gantt.config.readonly = true;
-    
-    // データロード
-    var tasks = {
-        data: {{ tasks_json|safe }}
-    };
-    
-    gantt.init("gantt_here");
-    gantt.parse(tasks);
+    // 初期表示
+    var currentScale = "{{ scale|default:'day' }}";
+    initGantt(currentScale);
     
     // スケール変更イベント
     document.getElementById('scaleSelect').addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
+        var newScale = this.value;
+        initGantt(newScale);
+        
+        // URLパラメータを更新（ページリロードなし）
+        var url = new URL(window.location);
+        url.searchParams.set('scale', newScale);
+        window.history.pushState({}, '', url);
     });
 });
 </script>

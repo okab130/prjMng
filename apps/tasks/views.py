@@ -2,11 +2,13 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib import messages
 from django.db.models import Q
+from django.views import View
 from apps.projects.models import Project
 from apps.accounts.models import User
-from .models import Task, TaskComment
+from .models import Task, TaskComment, SystemCategory, MajorCategory, MinorCategory
 from .forms import TaskForm, TaskCommentForm
 import json
 from datetime import datetime, timedelta
@@ -20,12 +22,27 @@ class TaskListView(LoginRequiredMixin, ListView):
     paginate_by = 50
     
     def get_queryset(self):
-        queryset = Task.objects.select_related('project', 'assignee', 'parent')
+        queryset = Task.objects.select_related(
+            'project', 'assignee', 'parent',
+            'system_category', 'major_category', 'minor_category'
+        )
         
         # フィルター
         project_id = self.request.GET.get('project')
         if project_id:
             queryset = queryset.filter(project_id=project_id)
+        
+        system_category_id = self.request.GET.get('system_category')
+        if system_category_id:
+            queryset = queryset.filter(system_category_id=system_category_id)
+        
+        major_category_id = self.request.GET.get('major_category')
+        if major_category_id:
+            queryset = queryset.filter(major_category_id=major_category_id)
+        
+        minor_category_id = self.request.GET.get('minor_category')
+        if minor_category_id:
+            queryset = queryset.filter(minor_category_id=minor_category_id)
         
         status = self.request.GET.get('status')
         if status:
@@ -34,8 +51,32 @@ class TaskListView(LoginRequiredMixin, ListView):
         assignee = self.request.GET.get('assignee')
         if assignee == 'me':
             queryset = queryset.filter(assignee=self.request.user)
+        elif assignee:
+            queryset = queryset.filter(assignee_id=assignee)
         
         return queryset.order_by('planned_end_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # フィルター用のマスタデータを取得（DEFAULTを除外）
+        context['projects'] = Project.objects.filter(is_deleted=False).order_by('name')
+        context['system_categories'] = SystemCategory.objects.filter(
+            is_deleted=False
+        ).exclude(code='DEFAULT').order_by('order', 'name')
+        context['major_categories'] = MajorCategory.objects.filter(
+            is_deleted=False
+        ).exclude(code='DEFAULT').order_by('order', 'name')
+        context['users'] = User.objects.filter(is_active=True).order_by('display_name')
+        
+        # 選択中の値を保持
+        context['selected_project'] = self.request.GET.get('project', '')
+        context['selected_system_category'] = self.request.GET.get('system_category', '')
+        context['selected_major_category'] = self.request.GET.get('major_category', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['selected_assignee'] = self.request.GET.get('assignee', '')
+        
+        return context
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -89,6 +130,55 @@ class TaskDeleteView(LoginRequiredMixin, DeleteView):
         self.object.is_deleted = True
         self.object.save()
         return redirect(self.success_url)
+
+
+class TaskDuplicateView(LoginRequiredMixin, CreateView):
+    """タスク複製"""
+    model = Task
+    template_name = 'tasks/task_form.html'
+    form_class = TaskForm
+    
+    def get_initial(self):
+        """複製元のタスクデータを初期値として設定"""
+        original_task = get_object_or_404(Task, pk=self.kwargs['pk'])
+        
+        return {
+            'project': original_task.project,
+            'system_category': original_task.system_category,
+            'major_category': original_task.major_category,
+            'minor_category': original_task.minor_category,
+            'parent': original_task.parent,
+            'title': f"{original_task.title} (複製)",
+            'description': original_task.description,
+            'assignee': original_task.assignee,
+            'status': Task.StatusChoices.NOT_STARTED,
+            'priority': original_task.priority,
+            'planned_start_date': original_task.planned_start_date,
+            'planned_end_date': original_task.planned_end_date,
+            'estimated_hours': original_task.estimated_hours,
+            'actual_start_date': None,
+            'actual_end_date': None,
+            'actual_hours': 0,
+            'progress_rate': 0,
+        }
+    
+    def form_valid(self, form):
+        # タスク番号は save() で自動生成される
+        form.instance.created_by = self.request.user
+        form.instance.updated_by = self.request.user
+        response = super().form_valid(form)
+        messages.success(self.request, f'タスク「{form.instance.title}」を複製しました。')
+        return response
+    
+    def get_success_url(self):
+        return reverse_lazy('tasks:task_detail', kwargs={'pk': self.object.pk})
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_duplicate'] = True  # テンプレートで「複製」と表示するため
+        original_task = get_object_or_404(Task, pk=self.kwargs['pk'])
+        context['original_task'] = original_task
+        return context
 
 
 class TaskCalendarView(LoginRequiredMixin, TemplateView):
@@ -206,3 +296,42 @@ class TaskCommentAddView(LoginRequiredMixin, CreateView):
     
     def get_success_url(self):
         return reverse_lazy('tasks:task_detail', kwargs={'pk': self.kwargs['task_pk']})
+
+
+class LoadSystemCategoriesView(LoginRequiredMixin, View):
+    """システム名読み込み（Ajax）"""
+    
+    def get(self, request):
+        project_id = request.GET.get('project_id')
+        system_categories = SystemCategory.objects.filter(
+            project_id=project_id,
+            is_deleted=False
+        ).order_by('order', 'name').values('id', 'name', 'code')
+        
+        return JsonResponse(list(system_categories), safe=False)
+
+
+class LoadMajorCategoriesView(LoginRequiredMixin, View):
+    """大分類読み込み（Ajax）"""
+    
+    def get(self, request):
+        system_category_id = request.GET.get('system_category_id')
+        major_categories = MajorCategory.objects.filter(
+            system_category_id=system_category_id,
+            is_deleted=False
+        ).order_by('order', 'name').values('id', 'name', 'code')
+        
+        return JsonResponse(list(major_categories), safe=False)
+
+
+class LoadMinorCategoriesView(LoginRequiredMixin, View):
+    """中分類読み込み（Ajax）"""
+    
+    def get(self, request):
+        major_category_id = request.GET.get('major_category_id')
+        minor_categories = MinorCategory.objects.filter(
+            major_category_id=major_category_id,
+            is_deleted=False
+        ).order_by('order', 'name').values('id', 'name', 'code')
+        
+        return JsonResponse(list(minor_categories), safe=False)

@@ -1,14 +1,32 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
-{% block page_title %}{% if object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
+{% block title %}{% if is_duplicate %}タスク複製{% elif object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
+{% block page_title %}{% if is_duplicate %}タスク複製{% elif object %}タスク編集{% else %}タスク作成{% endif %}{% endblock %}
+
+{% block page_actions %}
+<a href="{% if object %}{% url 'tasks:task_detail' object.pk %}{% else %}{% url 'tasks:task_list' %}{% endif %}" 
+   class="btn btn-secondary">
+    <i class="bi bi-x-circle"></i> キャンセル
+</a>
+<button type="submit" form="task-form" class="btn btn-primary">
+    <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}作成{% endif %}
+</button>
+{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-md-8 mx-auto">
+        {% if is_duplicate %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> 
+            <strong>タスクの複製</strong><br>
+            元のタスク: <a href="{% url 'tasks:task_detail' original_task.pk %}" target="_blank">{{ original_task.task_number }} - {{ original_task.title }}</a>
+        </div>
+        {% endif %}
+        
         <div class="card">
             <div class="card-body">
-                <form method="post">
+                <form method="post" id="task-form">
                     {% csrf_token %}
                     
                     {% if form.non_field_errors %}
@@ -18,7 +36,7 @@
                     {% endif %}
 
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label for="{{ form.project.id_for_label }}" class="form-label">
                                 プロジェクト <span class="text-danger">*</span>
                             </label>
@@ -28,19 +46,45 @@
                                 {{ form.project.errors }}
                             </div>
                             {% endif %}
+                            <small class="form-text text-muted">タスク番号は自動採番されます</small>
                         </div>
+                    </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="{{ form.task_number.id_for_label }}" class="form-label">
-                                タスク番号 <span class="text-danger">*</span>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.system_category.id_for_label }}" class="form-label">
+                                システム名 <span class="text-danger">*</span>
                             </label>
-                            {{ form.task_number }}
-                            {% if form.task_number.errors %}
+                            {{ form.system_category }}
+                            {% if form.system_category.errors %}
                             <div class="invalid-feedback d-block">
-                                {{ form.task_number.errors }}
+                                {{ form.system_category.errors }}
                             </div>
                             {% endif %}
-                            <small class="form-text text-muted">例: TSK-001</small>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.major_category.id_for_label }}" class="form-label">
+                                大分類 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.major_category }}
+                            {% if form.major_category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.major_category.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.minor_category.id_for_label }}" class="form-label">
+                                中分類 <span class="text-danger">*</span>
+                            </label>
+                            {{ form.minor_category }}
+                            {% if form.minor_category.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.minor_category.errors }}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -52,18 +96,6 @@
                         {% if form.title.errors %}
                         <div class="invalid-feedback d-block">
                             {{ form.title.errors }}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">
-                            説明
-                        </label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                        <div class="invalid-feedback d-block">
-                            {{ form.description.errors }}
                         </div>
                         {% endif %}
                     </div>
@@ -220,17 +252,143 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% if object %}{% url 'tasks:task_detail' object.pk %}{% else %}{% url 'tasks:task_list' %}{% endif %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> キャンセル
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle"></i> {% if object %}更新{% else %}作成{% endif %}
-                        </button>
+                    <!-- 説明欄を最下行に配置 -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            説明
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // プロジェクト変更時 → システム名を読み込み
+    $('#id_project').on('change', function() {
+        var projectId = $(this).val();
+        
+        // システム名、大分類、中分類をリセット
+        $('#id_system_category').html('<option value="">選択してください</option>');
+        $('#id_major_category').html('<option value="">選択してください</option>');
+        $('#id_minor_category').html('<option value="">選択してください</option>');
+        
+        if (projectId) {
+            $.ajax({
+                url: '{% url "tasks:ajax_load_system_categories" %}',
+                data: {'project_id': projectId},
+                success: function(data) {
+                    var options = '<option value="">選択してください</option>';
+                    $.each(data, function(index, item) {
+                        options += '<option value="' + item.id + '">' + item.code + ' - ' + item.name + '</option>';
+                    });
+                    $('#id_system_category').html(options);
+                }
+            });
+        }
+    });
+    
+    // システム名変更時 → 大分類を読み込み
+    $('#id_system_category').on('change', function() {
+        var systemCategoryId = $(this).val();
+        
+        // 大分類、中分類をリセット
+        $('#id_major_category').html('<option value="">選択してください</option>');
+        $('#id_minor_category').html('<option value="">選択してください</option>');
+        
+        if (systemCategoryId) {
+            $.ajax({
+                url: '{% url "tasks:ajax_load_major_categories" %}',
+                data: {'system_category_id': systemCategoryId},
+                success: function(data) {
+                    var options = '<option value="">選択してください</option>';
+                    $.each(data, function(index, item) {
+                        options += '<option value="' + item.id + '">' + item.code + ' - ' + item.name + '</option>';
+                    });
+                    $('#id_major_category').html(options);
+                }
+            });
+        }
+    });
+    
+    // 大分類変更時 → 中分類を読み込み
+    $('#id_major_category').on('change', function() {
+        var majorCategoryId = $(this).val();
+        
+        // 中分類をリセット
+        $('#id_minor_category').html('<option value="">選択してください</option>');
+        
+        if (majorCategoryId) {
+            $.ajax({
+                url: '{% url "tasks:ajax_load_minor_categories" %}',
+                data: {'major_category_id': majorCategoryId},
+                success: function(data) {
+                    var options = '<option value="">選択してください</option>';
+                    $.each(data, function(index, item) {
+                        options += '<option value="' + item.id + '">' + item.code + ' - ' + item.name + '</option>';
+                    });
+                    $('#id_minor_category').html(options);
+                }
+            });
+        }
+    });
+    
+    // 実績開始日・終了日の自動ステータス更新
+    $('#id_actual_start_date').on('change', function() {
+        var startDate = $(this).val();
+        var endDate = $('#id_actual_end_date').val();
+        var currentStatus = $('#id_status').val();
+        
+        if (startDate && !endDate && currentStatus === 'NOT_STARTED') {
+            $('#id_status').val('IN_PROGRESS');
+            showStatusFeedback('#id_status', 'ステータスを「進行中」に変更しました');
+        }
+    });
+    
+    $('#id_actual_end_date').on('change', function() {
+        var endDate = $(this).val();
+        
+        if (endDate) {
+            $('#id_status').val('COMPLETED');
+            $('#id_progress_rate').val(100);
+            showStatusFeedback('#id_status, #id_progress_rate', 'ステータスを「完了」、進捗率を100%に変更しました');
+        } else {
+            // 実績終了日が削除された場合
+            var startDate = $('#id_actual_start_date').val();
+            if (startDate) {
+                $('#id_status').val('IN_PROGRESS');
+                showStatusFeedback('#id_status', 'ステータスを「進行中」に戻しました');
+            } else {
+                $('#id_status').val('NOT_STARTED');
+                showStatusFeedback('#id_status', 'ステータスを「未着手」に戻しました');
+            }
+        }
+    });
+    
+    // ステータス変更のフィードバック表示
+    function showStatusFeedback(selector, message) {
+        $(selector).addClass('border-success');
+        
+        // トースト通知を表示（オプション）
+        if (typeof console !== 'undefined') {
+            console.log(message);
+        }
+        
+        // 1.5秒後に強調を解除
+        setTimeout(function() {
+            $(selector).removeClass('border-success');
+        }, 1500);
+    }
+});
+</script>
 {% endblock %}

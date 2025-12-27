@@ -80,6 +80,19 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">プロフィール</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">パスワード変更</a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'manual' %}" target="_blank">
+                                <i class="bi bi-book"></i> 利用者マニュアル
+                            </a></li>
+                            {% if user.is_staff %}
+                            <li><a class="dropdown-item" href="{% url 'admin_manual' %}" target="_blank">
+                                <i class="bi bi-gear"></i> 運用者マニュアル
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}">
+                                <i class="bi bi-shield-lock"></i> 管理画面
+                            </a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">ログアウト</a></li>
                         </ul>
                     </li>

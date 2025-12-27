@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Task, TaskComment
+from .models import Task, TaskComment, SystemCategory, MajorCategory, MinorCategory
 from apps.projects.models import Project
 from apps.accounts.models import User
 
@@ -11,15 +11,18 @@ class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
         fields = [
-            'project', 'parent', 'task_number', 'title', 'description',
+            'project', 'system_category', 'major_category', 'minor_category',
+            'parent', 'title', 'description',
             'assignee', 'status', 'priority', 'planned_start_date',
             'planned_end_date', 'actual_start_date', 'actual_end_date',
             'estimated_hours', 'actual_hours', 'progress_rate'
         ]
         widgets = {
-            'project': forms.Select(attrs={'class': 'form-select'}),
+            'project': forms.Select(attrs={'class': 'form-select', 'id': 'id_project'}),
+            'system_category': forms.Select(attrs={'class': 'form-select', 'id': 'id_system_category'}),
+            'major_category': forms.Select(attrs={'class': 'form-select', 'id': 'id_major_category'}),
+            'minor_category': forms.Select(attrs={'class': 'form-select', 'id': 'id_minor_category'}),
             'parent': forms.Select(attrs={'class': 'form-select'}),
-            'task_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '例: TSK-001'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'assignee': forms.Select(attrs={'class': 'form-select'}),
@@ -51,6 +54,59 @@ class TaskForm(forms.ModelForm):
         # プロジェクトは削除されていないもののみ
         self.fields['project'].queryset = Project.objects.filter(is_deleted=False)
         self.fields['project'].empty_label = '選択してください'
+        
+        # 初期状態では空のクエリセット
+        self.fields['system_category'].queryset = SystemCategory.objects.none()
+        self.fields['major_category'].queryset = MajorCategory.objects.none()
+        self.fields['minor_category'].queryset = MinorCategory.objects.none()
+        
+        # プロジェクトが選択されている場合
+        if 'project' in self.data:
+            try:
+                project_id = int(self.data.get('project'))
+                self.fields['system_category'].queryset = SystemCategory.objects.filter(
+                    project_id=project_id, is_deleted=False
+                ).order_by('order', 'name')
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk:
+            # 編集時
+            self.fields['system_category'].queryset = SystemCategory.objects.filter(
+                project=self.instance.project, is_deleted=False
+            ).order_by('order', 'name')
+            if self.instance.system_category:
+                self.fields['major_category'].queryset = MajorCategory.objects.filter(
+                    system_category=self.instance.system_category, is_deleted=False
+                ).order_by('order', 'name')
+            if self.instance.major_category:
+                self.fields['minor_category'].queryset = MinorCategory.objects.filter(
+                    major_category=self.instance.major_category, is_deleted=False
+                ).order_by('order', 'name')
+        
+        # システム名が選択されている場合
+        if 'system_category' in self.data:
+            try:
+                system_id = int(self.data.get('system_category'))
+                self.fields['major_category'].queryset = MajorCategory.objects.filter(
+                    system_category_id=system_id, is_deleted=False
+                ).order_by('order', 'name')
+            except (ValueError, TypeError):
+                pass
+        
+        # 大分類が選択されている場合
+        if 'major_category' in self.data:
+            try:
+                major_id = int(self.data.get('major_category'))
+                self.fields['minor_category'].queryset = MinorCategory.objects.filter(
+                    major_category_id=major_id, is_deleted=False
+                ).order_by('order', 'name')
+            except (ValueError, TypeError):
+                pass
+        
+        # 分類フィールドの設定
+        self.fields['system_category'].empty_label = '選択してください'
+        self.fields['major_category'].empty_label = '選択してください'
+        self.fields['minor_category'].empty_label = '選択してください'
         
         # 担当者はアクティブなユーザーのみ
         self.fields['assignee'].queryset = User.objects.filter(is_active=True)

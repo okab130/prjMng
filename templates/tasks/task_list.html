@@ -19,31 +19,62 @@
 <div class="card mb-3">
     <div class="card-body">
         <form method="get" class="row g-3">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">プロジェクト</label>
                 <select name="project" class="form-select">
                     <option value="">すべて</option>
-                    <!-- プロジェクト一覧は後で実装 -->
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <label class="form-label">システム名</label>
+                <select name="system_category" class="form-select">
+                    <option value="">すべて</option>
+                    {% for system in system_categories %}
+                    <option value="{{ system.id }}" {% if selected_system_category == system.id|stringformat:"s" %}selected{% endif %}>
+                        {{ system.code }} - {{ system.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">大分類</label>
+                <select name="major_category" class="form-select">
+                    <option value="">すべて</option>
+                    {% for major in major_categories %}
+                    <option value="{{ major.id }}" {% if selected_major_category == major.id|stringformat:"s" %}selected{% endif %}>
+                        {{ major.code }} - {{ major.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
                 <label class="form-label">ステータス</label>
                 <select name="status" class="form-select">
                     <option value="">すべて</option>
-                    <option value="NOT_STARTED">未着手</option>
-                    <option value="IN_PROGRESS">進行中</option>
-                    <option value="COMPLETED">完了</option>
-                    <option value="PENDING">保留</option>
+                    <option value="NOT_STARTED" {% if selected_status == "NOT_STARTED" %}selected{% endif %}>未着手</option>
+                    <option value="IN_PROGRESS" {% if selected_status == "IN_PROGRESS" %}selected{% endif %}>進行中</option>
+                    <option value="COMPLETED" {% if selected_status == "COMPLETED" %}selected{% endif %}>完了</option>
+                    <option value="ON_HOLD" {% if selected_status == "ON_HOLD" %}selected{% endif %}>保留</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">担当者</label>
                 <select name="assignee" class="form-select">
                     <option value="">すべて</option>
-                    <option value="me">自分のタスク</option>
+                    <option value="me" {% if selected_assignee == "me" %}selected{% endif %}>自分のタスク</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                        {{ user.display_name }}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-search"></i> 検索
@@ -63,11 +94,14 @@
                     <tr>
                         <th>タスク番号</th>
                         <th>タイトル</th>
-                        <th>プロジェクト</th>
+                        <th>システム名</th>
+                        <th>大分類</th>
+                        <th>中分類</th>
                         <th>担当者</th>
                         <th>優先度</th>
                         <th>ステータス</th>
-                        <th>期限</th>
+                        <th>開始日</th>
+                        <th>期限 <i class="bi bi-sort-down"></i></th>
                         <th>進捗</th>
                         <th>操作</th>
                     </tr>
@@ -77,7 +111,9 @@
                     <tr>
                         <td><a href="{% url 'tasks:task_detail' task.pk %}">{{ task.task_number }}</a></td>
                         <td>{{ task.title }}</td>
-                        <td>{{ task.project.name }}</td>
+                        <td>{{ task.system_category.code|default:"-" }}</td>
+                        <td>{{ task.major_category.code|default:"-" }}</td>
+                        <td>{{ task.minor_category.code|default:"-" }}</td>
                         <td>{{ task.assignee.display_name|default:"未割当" }}</td>
                         <td>
                             <span class="badge bg-{% if task.priority == 'HIGH' %}danger{% elif task.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
@@ -89,7 +125,10 @@
                                 {{ task.get_status_display }}
                             </span>
                         </td>
-                        <td>{{ task.planned_end_date }}</td>
+                        <td>{{ task.planned_start_date|date:"Y/m/d" }}</td>
+                        <td>
+                            <strong>{{ task.planned_end_date|date:"Y/m/d" }}</strong>
+                        </td>
                         <td>
                             <div class="progress" style="height: 5px; width: 80px;">
                                 <div class="progress-bar" style="width: {{ task.progress_rate }}%"></div>

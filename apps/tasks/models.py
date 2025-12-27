@@ -5,6 +5,114 @@ from apps.accounts.models import User
 from apps.projects.models import AbstractBaseModel, ActiveManager, Project
 
 
+class SystemCategory(AbstractBaseModel):
+    """システム名マスタ"""
+    
+    project = models.ForeignKey(
+        Project, 
+        on_delete=models.CASCADE, 
+        related_name='system_categories',
+        verbose_name='プロジェクト'
+    )
+    code = models.CharField(max_length=20, verbose_name='システムコード')
+    name = models.CharField(max_length=100, verbose_name='システム名')
+    description = models.TextField(blank=True, verbose_name='説明')
+    order = models.IntegerField(default=0, verbose_name='表示順')
+    
+    objects = ActiveManager()
+    all_objects = models.Manager()
+    
+    class Meta:
+        db_table = 'system_categories'
+        verbose_name = 'システム分類'
+        verbose_name_plural = 'システム分類'
+        ordering = ['project', 'order', 'code']
+        unique_together = [['project', 'code']]
+        indexes = [
+            models.Index(fields=['project', 'order']),
+        ]
+    
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class MajorCategory(AbstractBaseModel):
+    """大分類マスタ"""
+    
+    system_category = models.ForeignKey(
+        SystemCategory,
+        on_delete=models.CASCADE,
+        related_name='major_categories',
+        verbose_name='システム名'
+    )
+    code = models.CharField(max_length=20, verbose_name='大分類コード')
+    name = models.CharField(max_length=100, verbose_name='大分類名')
+    description = models.TextField(blank=True, verbose_name='説明')
+    order = models.IntegerField(default=0, verbose_name='表示順')
+    
+    objects = ActiveManager()
+    all_objects = models.Manager()
+    
+    class Meta:
+        db_table = 'major_categories'
+        verbose_name = '大分類'
+        verbose_name_plural = '大分類'
+        ordering = ['system_category', 'order', 'code']
+        unique_together = [['system_category', 'code']]
+        indexes = [
+            models.Index(fields=['system_category', 'order']),
+        ]
+    
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+    
+    @property
+    def full_path(self):
+        """階層パス取得"""
+        return f"{self.system_category.name} > {self.name}"
+
+
+class MinorCategory(AbstractBaseModel):
+    """中分類マスタ"""
+    
+    major_category = models.ForeignKey(
+        MajorCategory,
+        on_delete=models.CASCADE,
+        related_name='minor_categories',
+        verbose_name='大分類'
+    )
+    code = models.CharField(max_length=20, verbose_name='中分類コード')
+    name = models.CharField(max_length=100, verbose_name='中分類名')
+    description = models.TextField(blank=True, verbose_name='説明')
+    order = models.IntegerField(default=0, verbose_name='表示順')
+    
+    objects = ActiveManager()
+    all_objects = models.Manager()
+    
+    class Meta:
+        db_table = 'minor_categories'
+        verbose_name = '中分類'
+        verbose_name_plural = '中分類'
+        ordering = ['major_category', 'order', 'code']
+        unique_together = [['major_category', 'code']]
+        indexes = [
+            models.Index(fields=['major_category', 'order']),
+        ]
+    
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+    
+    @property
+    def full_path(self):
+        """階層パス取得"""
+        return f"{self.major_category.system_category.name} > {self.major_category.name} > {self.name}"
+    
+    @property
+    def system_category(self):
+        """システム分類取得"""
+        return self.major_category.system_category
+
+
 class Task(AbstractBaseModel):
     """タスク"""
     
@@ -23,6 +131,30 @@ class Task(AbstractBaseModel):
         Project, 
         on_delete=models.CASCADE, 
         related_name='tasks'
+    )
+    system_category = models.ForeignKey(
+        SystemCategory,
+        on_delete=models.PROTECT,
+        related_name='tasks',
+        verbose_name='システム名',
+        null=True,
+        blank=True
+    )
+    major_category = models.ForeignKey(
+        MajorCategory,
+        on_delete=models.PROTECT,
+        related_name='tasks',
+        verbose_name='大分類',
+        null=True,
+        blank=True
+    )
+    minor_category = models.ForeignKey(
+        MinorCategory,
+        on_delete=models.PROTECT,
+        related_name='tasks',
+        verbose_name='中分類',
+        null=True,
+        blank=True
     )
     parent = models.ForeignKey(
         'self', 
@@ -111,16 +243,90 @@ class Task(AbstractBaseModel):
             models.Index(fields=['project', 'status']),
             models.Index(fields=['assignee', 'status']),
             models.Index(fields=['planned_start_date', 'planned_end_date']),
+            models.Index(fields=['system_category']),
+            models.Index(fields=['major_category']),
+            models.Index(fields=['minor_category']),
         ]
         unique_together = [['project', 'task_number']]
     
     def __str__(self):
         return f"{self.task_number} - {self.title}"
     
+    def save(self, *args, **kwargs):
+        """タスク番号の自動採番 + ステータス自動更新"""
+        
+        # タスク番号の自動採番
+        if not self.pk and not self.task_number:
+            from django.db import transaction
+            
+            with transaction.atomic():
+                # プロジェクト内の最大タスク番号を取得（ロック付き）
+                last_task = Task.objects.select_for_update().filter(
+                    project=self.project,
+                    is_deleted=False
+                ).order_by('-task_number').first()
+                
+                if last_task and last_task.task_number:
+                    try:
+                        # 数字部分を抽出して+1
+                        last_number = int(last_task.task_number)
+                        self.task_number = f"{last_number + 1:03d}"
+                    except ValueError:
+                        # 既存データが数字でない場合は001から開始
+                        self.task_number = "001"
+                else:
+                    # 最初のタスク
+                    self.task_number = "001"
+        
+        # ステータス自動更新
+        old_status = None
+        if self.pk:
+            try:
+                old_task = Task.objects.get(pk=self.pk)
+                old_status = old_task.status
+            except Task.DoesNotExist:
+                pass
+        
+        # 実績終了日が入力されている場合 → 完了
+        if self.actual_end_date:
+            self.status = Task.StatusChoices.COMPLETED
+            self.progress_rate = 100
+        # 実績終了日が削除された場合の処理
+        elif not self.actual_end_date and old_status == Task.StatusChoices.COMPLETED:
+            # 実績開始日がある場合は進行中に
+            if self.actual_start_date:
+                self.status = Task.StatusChoices.IN_PROGRESS
+            else:
+                self.status = Task.StatusChoices.NOT_STARTED
+        # 実績開始日が入力され、実績終了日が未入力の場合 → 進行中
+        elif self.actual_start_date and not self.actual_end_date:
+            if self.status == Task.StatusChoices.NOT_STARTED:
+                self.status = Task.StatusChoices.IN_PROGRESS
+        
+        super().save(*args, **kwargs)
+    
     def clean(self):
         if self.planned_start_date and self.planned_end_date:
             if self.planned_start_date > self.planned_end_date:
                 raise ValidationError('終了予定日は開始予定日より後である必要があります')
+        
+        # 実績日のバリデーション
+        if self.actual_start_date and self.actual_end_date:
+            if self.actual_start_date > self.actual_end_date:
+                raise ValidationError('実績終了日は実績開始日より後である必要があります')
+        
+        # 階層整合性チェック
+        if self.minor_category and self.major_category:
+            if self.minor_category.major_category != self.major_category:
+                raise ValidationError('中分類と大分類の関係が正しくありません')
+        
+        if self.major_category and self.system_category:
+            if self.major_category.system_category != self.system_category:
+                raise ValidationError('大分類とシステム名の関係が正しくありません')
+        
+        if self.system_category and self.project:
+            if self.system_category.project != self.project:
+                raise ValidationError('システム名とプロジェクトの関係が正しくありません')
         
         # 親タスクの循環参照チェック
         if self.parent:

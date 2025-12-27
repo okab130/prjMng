@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロジェクト管理システム - 運用者マニュアル</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .content {
+            margin-left: 270px;
+            padding: 20px;
+        }
+        .nav-link {
+            color: #333;
+            padding: 5px 10px;
+        }
+        .nav-link:hover {
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dc3545;
+        }
+        h3 {
+            margin-top: 30px;
+            color: #dc3545;
+        }
+        .alert-danger {
+            margin-top: 20px;
+        }
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .command-block {
+            background-color: #212529;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .step {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#top">
+                <i class="bi bi-gear"></i> プロジェクト管理システム 運用者マニュアル
+            </a>
+            <a href="/" class="btn btn-light btn-sm">
+                <i class="bi bi-house"></i> システムに戻る
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- サイドバー -->
+            <nav class="sidebar">
+                <h5>目次</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#overview">1. システム構成</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#installation">2. インストール</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#configuration">3. 設定</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#admin">4. 管理画面</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#user-management">5. ユーザー管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#master-data">6. マスタデータ管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#backup">7. バックアップ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#maintenance">8. 定期メンテナンス</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#troubleshooting">9. トラブルシューティング</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- メインコンテンツ -->
+            <main class="content">
+                <div id="top"></div>
+                <h1 class="mb-4">
+                    <i class="bi bi-gear-fill text-danger"></i> 
+                    プロジェクト管理システム 運用者マニュアル
+                </h1>
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>運用者向けドキュメント</strong><br>
+                    本マニュアルは、システムの運用・保守を担当する方向けの技術ドキュメントです。
+                </div>
+
+                <!-- 1. システム構成 -->
+                <section id="overview">
+                    <h2><i class="bi bi-diagram-3"></i> 1. システム構成</h2>
+                    
+                    <h3>1.1 技術スタック</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>コンポーネント</th>
+                                <th>技術</th>
+                                <th>バージョン</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>プログラミング言語</td>
+                                <td>Python</td>
+                                <td>3.10以上</td>
+                            </tr>
+                            <tr>
+                                <td>Webフレームワーク</td>
+                                <td>Django</td>
+                                <td>4.2以上</td>
+                            </tr>
+                            <tr>
+                                <td>データベース</td>
+                                <td>SQLite（開発）/ PostgreSQL（本番推奨）</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>フロントエンド</td>
+                                <td>Bootstrap 5, jQuery</td>
+                                <td>5.3.0 / 3.6以上</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>1.2 ディレクトリ構成</h3>
+                    <pre class="command-block">
+prjMng/
+├── apps/                    # アプリケーション
+│   ├── accounts/           # ユーザー管理
+│   ├── projects/           # プロジェクト管理
+│   ├── tasks/              # タスク管理
+│   ├── quality/            # 品質管理（バグ、テストケース）
+│   └── reviews/            # レビュー管理
+├── config/                 # プロジェクト設定
+│   ├── settings.py         # Django設定
+│   ├── urls.py             # URLルーティング
+│   └── wsgi.py             # WSGIエントリポイント
+├── templates/              # テンプレート
+│   ├── base.html           # ベーステンプレート
+│   ├── manual.html         # 利用者マニュアル
+│   └── admin_manual.html   # 運用者マニュアル
+├── static/                 # 静的ファイル
+├── media/                  # アップロードファイル
+├── venv/                   # 仮想環境
+├── manage.py               # Django管理コマンド
+└── requirements.txt        # 依存パッケージ
+                    </pre>
+                </section>
+
+                <!-- 2. インストール -->
+                <section id="installation">
+                    <h2><i class="bi bi-download"></i> 2. インストール</h2>
+                    
+                    <h3>2.1 前提条件</h3>
+                    <ul>
+                        <li>Python 3.10以上がインストールされていること</li>
+                        <li>pip（Pythonパッケージマネージャー）が利用可能であること</li>
+                        <li>Git（オプション）</li>
+                    </ul>
+
+                    <h3>2.2 インストール手順</h3>
+                    
+                    <div class="step">
+                        <strong>手順1: リポジトリのクローン（Gitを使用する場合）</strong>
+                        <div class="command-block">
+$ git clone https://github.com/your-org/prjMng.git
+$ cd prjMng
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順2: 仮想環境の作成</strong>
+                        <div class="command-block">
+$ python -m venv venv
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順3: 仮想環境の有効化</strong>
+                        <div class="command-block">
+# Windows
+$ venv\Scripts\activate
+
+# macOS/Linux
+$ source venv/bin/activate
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順4: 依存パッケージのインストール</strong>
+                        <div class="command-block">
+$ pip install -r requirements.txt
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順5: データベースのマイグレーション</strong>
+                        <div class="command-block">
+$ python manage.py migrate
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順6: スーパーユーザーの作成</strong>
+                        <div class="command-block">
+$ python manage.py createsuperuser
+# ユーザー名、メールアドレス、パスワードを入力
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順7: 静的ファイルの収集（本番環境のみ）</strong>
+                        <div class="command-block">
+$ python manage.py collectstatic
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>手順8: 開発サーバーの起動</strong>
+                        <div class="command-block">
+$ python manage.py runserver
+# ブラウザで http://localhost:8000/ にアクセス
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. 設定 -->
+                <section id="configuration">
+                    <h2><i class="bi bi-sliders"></i> 3. 設定</h2>
+                    
+                    <h3>3.1 環境変数の設定</h3>
+                    <p>
+                        <code>config/settings.py</code>で環境変数を設定します。
+                        本番環境では、環境変数または<code>.env</code>ファイルで管理することを推奨します。
+                    </p>
+
+                    <h4>主要な設定項目:</h4>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>設定項目</th>
+                                <th>説明</th>
+                                <th>デフォルト値</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>DEBUG</code></td>
+                                <td>デバッグモード</td>
+                                <td>True（開発）/ False（本番）</td>
+                            </tr>
+                            <tr>
+                                <td><code>SECRET_KEY</code></td>
+                                <td>暗号化キー</td>
+                                <td>※本番環境では必ず変更</td>
+                            </tr>
+                            <tr>
+                                <td><code>ALLOWED_HOSTS</code></td>
+                                <td>許可するホスト</td>
+                                <td>['localhost', '127.0.0.1']</td>
+                            </tr>
+                            <tr>
+                                <td><code>DATABASES</code></td>
+                                <td>データベース設定</td>
+                                <td>SQLite（開発）</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>3.2 データベース設定</h3>
+                    
+                    <h4>PostgreSQL（本番環境推奨）</h4>
+                    <pre class="command-block">
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'prjmng_db',
+        'USER': 'prjmng_user',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+                    </pre>
+
+                    <h3>3.3 メール設定（通知機能用）</h3>
+                    <pre class="command-block">
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.example.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'noreply@example.com'
+EMAIL_HOST_PASSWORD = 'your_password'
+                    </pre>
+                </section>
+
+                <!-- 4. 管理画面 -->
+                <section id="admin">
+                    <h2><i class="bi bi-shield-lock"></i> 4. 管理画面</h2>
+                    
+                    <h3>4.1 管理画面へのアクセス</h3>
+                    <p>
+                        ブラウザで以下のURLにアクセスします：
+                    </p>
+                    <div class="command-block">
+http://localhost:8000/admin/
+                    </div>
+                    <p>
+                        スーパーユーザーのIDとパスワードでログインします。
+                    </p>
+
+                    <h3>4.2 管理画面で操作できる項目</h3>
+                    <ul>
+                        <li><strong>ユーザー:</strong> ユーザーアカウントの管理</li>
+                        <li><strong>グループ:</strong> 権限グループの管理</li>
+                        <li><strong>プロジェクト:</strong> プロジェクトの作成・編集・削除</li>
+                        <li><strong>タスク:</strong> タスクの作成・編集・削除</li>
+                        <li><strong>システム分類/大分類/中分類:</strong> 分類マスタの管理</li>
+                        <li><strong>バグ:</strong> バグ情報の管理</li>
+                        <li><strong>レビュー:</strong> レビュー情報の管理</li>
+                    </ul>
+
+                    <h3>4.3 管理画面のカスタマイズ</h3>
+                    <p>
+                        <code>apps/*/admin.py</code>ファイルで、管理画面の表示項目やフィルターをカスタマイズできます。
+                    </p>
+                </section>
+
+                <!-- 5. ユーザー管理 -->
+                <section id="user-management">
+                    <h2><i class="bi bi-people"></i> 5. ユーザー管理</h2>
+                    
+                    <h3>5.1 ユーザーの作成</h3>
+                    <div class="step">
+                        <strong>管理画面から作成:</strong>
+                        <ol>
+                            <li>管理画面にアクセス</li>
+                            <li>「ユーザー」→「追加」をクリック</li>
+                            <li>ユーザー名、メールアドレス、パスワードを入力</li>
+                            <li>必要に応じて権限を設定</li>
+                            <li>「保存」をクリック</li>
+                        </ol>
+                    </div>
+
+                    <div class="step">
+                        <strong>コマンドラインから作成:</strong>
+                        <div class="command-block">
+$ python manage.py createsuperuser
+                        </div>
+                    </div>
+
+                    <h3>5.2 権限設定</h3>
+                    <p>Djangoの権限システムを使用して、ユーザーごとに以下の権限を設定できます：</p>
+                    <ul>
+                        <li>スタッフステータス: 管理画面へのアクセス権</li>
+                        <li>スーパーユーザー: すべての権限</li>
+                        <li>グループ: 特定のグループに属するユーザーにまとめて権限付与</li>
+                    </ul>
+
+                    <h3>5.3 ユーザーの無効化</h3>
+                    <p>
+                        ユーザーを削除せずに無効化する場合：
+                    </p>
+                    <ol>
+                        <li>管理画面でユーザーを選択</li>
+                        <li>「アクティブ」のチェックを外す</li>
+                        <li>「保存」をクリック</li>
+                    </ol>
+                </section>
+
+                <!-- 6. マスタデータ管理 -->
+                <section id="master-data">
+                    <h2><i class="bi bi-database"></i> 6. マスタデータ管理</h2>
+                    
+                    <h3>6.1 分類マスタの管理</h3>
+                    <p>
+                        システム名、大分類、中分類の3階層で構成されます。
+                        管理画面から登録・編集できます。
+                    </p>
+
+                    <h4>登録時の注意事項:</h4>
+                    <ul>
+                        <li>コードは英数字で入力（システム内部で使用）</li>
+                        <li>名称はユーザーに表示される日本語名</li>
+                        <li>表示順は数値で指定（小さい順に表示）</li>
+                        <li>階層の親子関係を正しく設定</li>
+                    </ul>
+
+                    <h3>6.2 初期データの投入</h3>
+                    <p>
+                        システムに初期データを投入するスクリプトが用意されています：
+                    </p>
+                    <div class="command-block">
+# 分類マスタの作成
+$ python create_category_master.py
+
+# テストデータの作成（開発環境のみ）
+$ python create_test_data.py
+                    </div>
+
+                    <h3>6.3 データのエクスポート/インポート</h3>
+                    <div class="step">
+                        <strong>エクスポート:</strong>
+                        <div class="command-block">
+$ python manage.py dumpdata apps.tasks.SystemCategory --indent 2 > system_categories.json
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <strong>インポート:</strong>
+                        <div class="command-block">
+$ python manage.py loaddata system_categories.json
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. バックアップ -->
+                <section id="backup">
+                    <h2><i class="bi bi-save"></i> 7. バックアップ</h2>
+                    
+                    <h3>7.1 データベースバックアップ</h3>
+                    
+                    <h4>SQLiteの場合:</h4>
+                    <div class="command-block">
+# データベースファイルをコピー
+$ cp db.sqlite3 backup/db_backup_20250127.sqlite3
+                    </div>
+
+                    <h4>PostgreSQLの場合:</h4>
+                    <div class="command-block">
+# pg_dumpを使用
+$ pg_dump -U prjmng_user -h localhost prjmng_db > backup/db_backup_20250127.sql
+                    </div>
+
+                    <h3>7.2 メディアファイルのバックアップ</h3>
+                    <div class="command-block">
+# mediaディレクトリをアーカイブ
+$ tar -czf backup/media_backup_20250127.tar.gz media/
+                    </div>
+
+                    <h3>7.3 自動バックアップの設定</h3>
+                    <p>
+                        Cronジョブ（Linux）またはタスクスケジューラー（Windows）で定期的にバックアップを実行：
+                    </p>
+                    <div class="command-block">
+# Cron例（毎日午前2時）
+0 2 * * * /path/to/backup_script.sh
+                    </div>
+
+                    <h3>7.4 バックアップからの復元</h3>
+                    <div class="step">
+                        <strong>PostgreSQLの復元:</strong>
+                        <div class="command-block">
+$ psql -U prjmng_user -h localhost prjmng_db < backup/db_backup_20250127.sql
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. 定期メンテナンス -->
+                <section id="maintenance">
+                    <h2><i class="bi bi-wrench"></i> 8. 定期メンテナンス</h2>
+                    
+                    <h3>8.1 ログの確認</h3>
+                    <p>
+                        システムログを定期的に確認し、エラーや警告がないかチェックします。
+                    </p>
+
+                    <h3>8.2 データベースの最適化</h3>
+                    <div class="command-block">
+# SQLiteの最適化
+$ python manage.py dbshell
+sqlite> VACUUM;
+
+# PostgreSQLの最適化
+$ psql -U prjmng_user -h localhost prjmng_db
+prjmng_db=# VACUUM ANALYZE;
+                    </div>
+
+                    <h3>8.3 不要データの削除</h3>
+                    <p>
+                        論理削除されたデータを物理削除する場合：
+                    </p>
+                    <div class="command-block">
+# 管理画面またはPythonシェルから実行
+$ python manage.py shell
+>>> from apps.tasks.models import Task
+>>> Task.all_objects.filter(is_deleted=True).delete()
+                    </div>
+
+                    <h3>8.4 セキュリティアップデート</h3>
+                    <p>
+                        依存パッケージを定期的に更新します：
+                    </p>
+                    <div class="command-block">
+# パッケージの更新確認
+$ pip list --outdated
+
+# 更新の実行
+$ pip install --upgrade django
+
+# requirements.txtの更新
+$ pip freeze > requirements.txt
+                    </div>
+
+                    <h3>8.5 メンテナンススケジュール</h3>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>頻度</th>
+                                <th>作業内容</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>毎日</td>
+                                <td>バックアップの実行、ログの確認</td>
+                            </tr>
+                            <tr>
+                                <td>毎週</td>
+                                <td>ディスク使用量の確認、パフォーマンスチェック</td>
+                            </tr>
+                            <tr>
+                                <td>毎月</td>
+                                <td>セキュリティアップデート、データベース最適化</td>
+                            </tr>
+                            <tr>
+                                <td>四半期</td>
+                                <td>不要データの削除、バックアップの動作確認</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 9. トラブルシューティング -->
+                <section id="troubleshooting">
+                    <h2><i class="bi bi-bug"></i> 9. トラブルシューティング</h2>
+                    
+                    <h3>9.1 サーバーが起動しない</h3>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>症状: python manage.py runserver でエラーが出る</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>確認事項:</strong></p>
+                            <ul>
+                                <li>仮想環境が有効化されているか</li>
+                                <li>依存パッケージがインストールされているか</li>
+                                <li>ポート8000が使用中でないか</li>
+                                <li>settings.pyの設定が正しいか</li>
+                            </ul>
+                            <div class="command-block">
+# 別のポートで起動
+$ python manage.py runserver 8080
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>9.2 データベースエラー</h3>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>症状: データベース接続エラー</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>対処法:</strong></p>
+                            <ol>
+                                <li>データベースサーバーが起動しているか確認</li>
+                                <li>接続情報（ホスト、ポート、ユーザー、パスワード）が正しいか確認</li>
+                                <li>マイグレーションが実行されているか確認</li>
+                            </ol>
+                            <div class="command-block">
+# マイグレーションの実行
+$ python manage.py migrate
+
+# マイグレーション状態の確認
+$ python manage.py showmigrations
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>9.3 静的ファイルが表示されない</h3>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>症状: CSSやJavaScriptが読み込まれない</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>対処法:</strong></p>
+                            <ol>
+                                <li>開発環境では<code>DEBUG = True</code>になっているか確認</li>
+                                <li>本番環境では<code>collectstatic</code>を実行</li>
+                                <li>Webサーバー（nginx等）の設定を確認</li>
+                            </ol>
+                            <div class="command-block">
+$ python manage.py collectstatic --noinput
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>9.4 ログの確認方法</h3>
+                    <p>
+                        エラーの詳細を確認するために、ログを確認します：
+                    </p>
+                    <div class="command-block">
+# Djangoのログ（settings.pyで設定）
+$ tail -f logs/django.log
+
+# Webサーバーのログ
+$ tail -f /var/log/nginx/error.log
+                    </div>
+
+                    <h3>9.5 パフォーマンス問題</h3>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <strong>症状: 画面の表示が遅い</strong>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>確認事項:</strong></p>
+                            <ul>
+                                <li>データベースのインデックスが適切に設定されているか</li>
+                                <li>N+1問題が発生していないか（select_related/prefetch_relatedの使用）</li>
+                                <li>不要なデータを取得していないか</li>
+                            </ul>
+                            <div class="command-block">
+# デバッグツールバーの有効化（開発環境）
+$ pip install django-debug-toolbar
+# settings.pyに設定を追加
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>9.6 緊急連絡先</h3>
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-octagon"></i>
+                        <strong>重大な障害が発生した場合</strong><br>
+                        <ul class="mb-0">
+                            <li>システム管理者: admin@example.com</li>
+                            <li>緊急連絡先: xxx-xxxx-xxxx</li>
+                            <li>エスカレーション: 開発チーム</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <hr class="my-5">
+
+                <div class="text-center text-muted">
+                    <p>
+                        <small>
+                            プロジェクト管理システム 運用者マニュアル v1.0<br>
+                            最終更新日: 2025年1月
+                        </small>
+                    </p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // アクティブなナビゲーションリンクのハイライト
+        document.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            
+            let currentSection = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 100) {
+                    currentSection = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + currentSection) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

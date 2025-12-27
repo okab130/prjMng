@@ -6,6 +6,9 @@
 <a href="{% url 'tasks:task_update' task.pk %}" class="btn btn-primary">
     <i class="bi bi-pencil"></i> 編集
 </a>
+<a href="{% url 'tasks:task_duplicate' task.pk %}" class="btn btn-success">
+    <i class="bi bi-files"></i> 複製
+</a>
 <a href="{% url 'tasks:task_delete' task.pk %}" class="btn btn-danger">
     <i class="bi bi-trash"></i> 削除
 </a>
@@ -32,6 +35,18 @@
                     <tr>
                         <th>プロジェクト</th>
                         <td><a href="{% url 'projects:project_detail' task.project.pk %}">{{ task.project.name }}</a></td>
+                    </tr>
+                    <tr>
+                        <th>システム名</th>
+                        <td>{{ task.system_category.name|default:"未設定" }}</td>
+                    </tr>
+                    <tr>
+                        <th>大分類</th>
+                        <td>{{ task.major_category.name|default:"未設定" }}</td>
+                    </tr>
+                    <tr>
+                        <th>中分類</th>
+                        <td>{{ task.minor_category.name|default:"未設定" }}</td>
                     </tr>
                     <tr>
                         <th>説明</th>

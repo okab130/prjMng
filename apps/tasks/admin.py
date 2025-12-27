@@ -1,6 +1,48 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Task, TaskDependency, TaskComment
+from .models import Task, TaskDependency, TaskComment, SystemCategory, MajorCategory, MinorCategory
+
+
+@admin.register(SystemCategory)
+class SystemCategoryAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'project', 'order', 'is_deleted')
+    list_filter = ('project', 'is_deleted')
+    search_fields = ('code', 'name')
+    ordering = ('project', 'order', 'code')
+    
+    fieldsets = (
+        ('基本情報', {
+            'fields': ('project', 'code', 'name', 'description', 'order')
+        }),
+    )
+
+
+@admin.register(MajorCategory)
+class MajorCategoryAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'system_category', 'order', 'is_deleted')
+    list_filter = ('system_category__project', 'is_deleted')
+    search_fields = ('code', 'name')
+    ordering = ('system_category', 'order', 'code')
+    
+    fieldsets = (
+        ('基本情報', {
+            'fields': ('system_category', 'code', 'name', 'description', 'order')
+        }),
+    )
+
+
+@admin.register(MinorCategory)
+class MinorCategoryAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'major_category', 'order', 'is_deleted')
+    list_filter = ('major_category__system_category__project', 'is_deleted')
+    search_fields = ('code', 'name')
+    ordering = ('major_category', 'order', 'code')
+    
+    fieldsets = (
+        ('基本情報', {
+            'fields': ('major_category', 'code', 'name', 'description', 'order')
+        }),
+    )
 
 
 class TaskCommentInline(admin.TabularInline):
@@ -12,14 +54,14 @@ class TaskCommentInline(admin.TabularInline):
 
 @admin.register(Task)
 class TaskAdmin(SimpleHistoryAdmin):
-    list_display = ['task_number', 'title', 'project', 'assignee', 'status', 'priority', 'planned_end_date', 'progress_rate']
-    list_filter = ['status', 'priority', 'project']
+    list_display = ['task_number', 'title', 'project', 'system_category', 'major_category', 'minor_category', 'assignee', 'status', 'priority', 'planned_end_date', 'progress_rate']
+    list_filter = ['status', 'priority', 'project', 'system_category', 'major_category']
     search_fields = ['task_number', 'title']
     inlines = [TaskCommentInline]
     
     fieldsets = (
         ('基本情報', {
-            'fields': ('project', 'parent', 'task_number', 'title', 'description', 'assignee')
+            'fields': ('project', 'system_category', 'major_category', 'minor_category', 'parent', 'task_number', 'title', 'description', 'assignee')
         }),
         ('ステータス', {
             'fields': ('status', 'priority', 'progress_rate')

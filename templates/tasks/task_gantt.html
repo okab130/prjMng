@@ -106,14 +106,25 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.css" rel="stylesheet">
+<style>
+.gantt_container {
+    height: 600px;
+    width: 100%;
+}
+</style>
+{% endblock %}
+
 {% block extra_js %}
-<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<script src="https://cdn.dhtmlx.com/gantt/8.0.6/dhtmlxgantt.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // タスクデータ
     var tasksData = {{ tasks_json|safe }};
     
     console.log('=== Gantt Chart Debug ===');
+    console.log('Gantt version:', gantt.version);
     console.log('Tasks count:', tasksData.length);
     console.log('Tasks data:', tasksData);
     
@@ -122,6 +133,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // スケール設定
+    var scale = "{{ scale|default:'day' }}";
+    console.log('Scale from template:', scale);
+    
     // 基本設定
     gantt.config.date_format = "%Y-%m-%d";
     gantt.config.readonly = true;
@@ -129,39 +144,30 @@ document.addEventListener('DOMContentLoaded', function() {
     gantt.config.autosize = "xy";
     gantt.config.row_height = 30;
     
-    // スケール設定
-    var scale = "{{ scale|default:'day' }}";
-    console.log('Scale from template:', scale);
-    console.log('Scale type:', typeof scale);
-    console.log('Scale === "week":', scale === "week");
-    console.log('Scale === "month":', scale === "month");
-    console.log('Scale === "day":', scale === "day");
-    
+    // スケールに応じた設定
     if (scale === "week") {
         console.log('Setting week scale');
-        gantt.config.scale_unit = "week";
-        gantt.config.date_scale = "Week %W";
-        gantt.config.step = 1;
-        gantt.config.subscales = [
-            {unit: "day", step: 1, date: "%d %M"}
+        gantt.config.scales = [
+            {unit: "week", step: 1, format: function(date) {
+                var weekNum = gantt.date.date_to_str("%W")(date);
+                return "Week " + weekNum;
+            }},
+            {unit: "day", step: 1, format: "%d %M"}
         ];
-        gantt.config.scale_height = 50;
     } else if (scale === "month") {
         console.log('Setting month scale');
-        gantt.config.scale_unit = "month";
-        gantt.config.date_scale = "%F %Y";
-        gantt.config.step = 1;
-        gantt.config.subscales = [
-            {unit: "week", step: 1, date: "Week %W"}
+        gantt.config.scales = [
+            {unit: "month", step: 1, format: "%F %Y"},
+            {unit: "week", step: 1, format: function(date) {
+                var weekNum = gantt.date.date_to_str("%W")(date);
+                return "Week " + weekNum;
+            }}
         ];
-        gantt.config.scale_height = 50;
     } else {
         console.log('Setting day scale');
-        gantt.config.scale_unit = "day";
-        gantt.config.date_scale = "%d %M";
-        gantt.config.step = 1;
-        gantt.config.subscales = [];
-        gantt.config.scale_height = 30;
+        gantt.config.scales = [
+            {unit: "day", step: 1, format: "%d %M"}
+        ];
     }
     
     // カラム設定
@@ -192,20 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // スケールのカスタムテンプレート
-    if (scale === "week") {
-        gantt.templates.date_scale = function(date) {
-            var weekNum = gantt.date.date_to_str("%W")(date);
-            return "Week " + weekNum;
-        };
-    } else if (scale === "month") {
-        gantt.templates.date_scale = function(date) {
-            return gantt.date.date_to_str("%F %Y")(date);
-        };
-    } else {
-        gantt.templates.date_scale = null; // デフォルト
-    }
-    
     try {
         // 既存のガントチャートインスタンスをクリア
         if (window.gantt && gantt.$initialized) {
@@ -213,34 +205,22 @@ document.addEventListener('DOMContentLoaded', function() {
             gantt.clearAll();
         }
         
-        // 初期化前の設定確認
-        console.log('Before init - scale_unit:', gantt.config.scale_unit);
-        console.log('Before init - date_scale:', gantt.config.date_scale);
+        console.log('Config scales:', gantt.config.scales);
         
         // 初期化
         gantt.init("gantt_here");
         console.log('Gantt initialized');
         
-        // 初期化後の設定確認
-        console.log('After init - scale_unit:', gantt.config.scale_unit);
-        console.log('After init - date_scale:', gantt.config.date_scale);
-        console.log('After init - subscales:', gantt.config.subscales);
-        
         // データロード
         gantt.parse({data: tasksData});
         console.log('Data parsed, task count:', gantt.getTaskCount());
         
-        // 強制的に再描画
-        gantt.render();
-        console.log('Gantt rendered');
-        
         // 最終確認：レンダリング後の設定
         setTimeout(function() {
-            console.log('After render - scale_unit:', gantt.config.scale_unit);
             var scaleHeader = document.querySelector('.gantt_scale_line');
             console.log('Scale header exists:', !!scaleHeader);
             if (scaleHeader) {
-                console.log('Scale header text:', scaleHeader.textContent.substring(0, 50));
+                console.log('Scale header HTML:', scaleHeader.innerHTML.substring(0, 200));
             }
         }, 200);
     } catch (error) {

@@ -140,22 +140,28 @@ document.addEventListener('DOMContentLoaded', function() {
     if (scale === "week") {
         console.log('Setting week scale');
         gantt.config.scale_unit = "week";
-        gantt.config.date_scale = "Week #%W";
+        gantt.config.date_scale = "Week %W";
+        gantt.config.step = 1;
         gantt.config.subscales = [
             {unit: "day", step: 1, date: "%d %M"}
         ];
+        gantt.config.scale_height = 50;
     } else if (scale === "month") {
         console.log('Setting month scale');
         gantt.config.scale_unit = "month";
         gantt.config.date_scale = "%F %Y";
+        gantt.config.step = 1;
         gantt.config.subscales = [
-            {unit: "day", step: 1, date: "%j"}
+            {unit: "week", step: 1, date: "Week %W"}
         ];
+        gantt.config.scale_height = 50;
     } else {
         console.log('Setting day scale');
         gantt.config.scale_unit = "day";
-        gantt.config.date_scale = "%d %M %Y";
+        gantt.config.date_scale = "%d %M";
+        gantt.config.step = 1;
         gantt.config.subscales = [];
+        gantt.config.scale_height = 30;
     }
     
     // カラム設定
@@ -185,6 +191,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return "";
         }
     };
+    
+    // スケールのカスタムテンプレート
+    if (scale === "week") {
+        gantt.templates.date_scale = function(date) {
+            var weekNum = gantt.date.date_to_str("%W")(date);
+            return "Week " + weekNum;
+        };
+    } else if (scale === "month") {
+        gantt.templates.date_scale = function(date) {
+            return gantt.date.date_to_str("%F %Y")(date);
+        };
+    } else {
+        gantt.templates.date_scale = null; // デフォルト
+    }
     
     try {
         // 既存のガントチャートインスタンスをクリア

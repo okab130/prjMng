@@ -119,28 +119,32 @@ document.addEventListener('DOMContentLoaded', function() {
         gantt.templates = {};
         
         // 基本設定
-        gantt.config.date_format = "%Y-%m-%d %H:%i";
+        gantt.config.date_format = "%d-%m-%Y";
         gantt.config.readonly = true;
         gantt.config.show_progress = true;
+        gantt.config.autosize = "y";
+        gantt.config.auto_scheduling = false;
         
         // スケール設定
         if (scale === "week") {
             gantt.config.scale_unit = "week";
-            gantt.config.date_scale = "Week %W";
+            gantt.config.date_scale = "%M %d";
+            gantt.config.step = 1;
             gantt.config.subscales = [
-                {unit: "day", step: 1, date: "%d"}
+                {unit: "day", step: 1, date: "%j %D"}
             ];
             gantt.config.min_column_width = 70;
         } else if (scale === "month") {
             gantt.config.scale_unit = "month";
-            gantt.config.date_scale = "%Y年%m月";
+            gantt.config.date_scale = "%F %Y";
+            gantt.config.step = 1;
             gantt.config.subscales = [
-                {unit: "week", step: 1, date: "Week %W"}
+                {unit: "day", step: 1, date: "%j"}
             ];
             gantt.config.min_column_width = 100;
         } else {
             gantt.config.scale_unit = "day";
-            gantt.config.date_scale = "%Y-%m-%d";
+            gantt.config.date_scale = "%d %M";
             gantt.config.subscales = [];
             gantt.config.min_column_width = 50;
         }
@@ -148,7 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // カラム設定
         gantt.config.columns = [
             {name: "text", label: "タスク", width: 200, tree: true},
-            {name: "start_date", label: "開始日", align: "center", width: 80},
+            {name: "start_date", label: "開始日", align: "center", width: 80, template: function(obj) {
+                return gantt.templates.date_grid(obj.start_date);
+            }},
             {name: "duration", label: "日数", align: "center", width: 50},
             {name: "progress", label: "進捗", align: "center", width: 60, template: function(obj) {
                 return Math.round(obj.progress * 100) + "%";
@@ -171,6 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 default:
                     return "";
             }
+        };
+        
+        // 日付表示フォーマット
+        gantt.templates.date_grid = function(date) {
+            return gantt.date.date_to_str("%d/%m/%Y")(date);
         };
         
         // 初期化

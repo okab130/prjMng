@@ -266,17 +266,26 @@ class TaskGanttView(LoginRequiredMixin, TemplateView):
         # ガントチャート用データ生成
         tasks_data = []
         for task in queryset:
+            # 開始日と終了日が両方ある場合のみ表示
             if task.planned_start_date and task.planned_end_date:
-                duration = (task.planned_end_date - task.planned_start_date).days + 1
-                tasks_data.append({
-                    'id': task.id,
-                    'text': f"{task.task_number} - {task.title}",
-                    'start_date': task.planned_start_date.strftime('%Y-%m-%d 00:00'),
-                    'duration': duration,
-                    'progress': float(task.progress_rate or 0) / 100.0,
-                    'parent': task.parent_id if task.parent_id else 0,
-                    'status': task.status
-                })
+                try:
+                    duration = (task.planned_end_date - task.planned_start_date).days
+                    if duration < 1:
+                        duration = 1
+                    
+                    tasks_data.append({
+                        'id': str(task.id),
+                        'text': f"{task.task_number} - {task.title}",
+                        'start_date': task.planned_start_date.strftime('%d-%m-%Y'),
+                        'duration': duration,
+                        'progress': float(task.progress_rate or 0) / 100.0,
+                        'parent': str(task.parent_id) if task.parent_id else 0,
+                        'status': task.status,
+                        'open': True
+                    })
+                except Exception as e:
+                    # エラーがあってもスキップして続行
+                    continue
         
         context['tasks_json'] = json.dumps(tasks_data)
         return context
